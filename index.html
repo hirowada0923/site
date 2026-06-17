@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<!-- saved from url=(0100)file:///Users/hiro/claude-ibm/design-thinking/collab-sessions/2026-06-17-dka-clinical-reasoning.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DKA 臨床推論 — Codex × Claude</title>
+<style>
+:root {
+  --bg:#f4f4f8; --surface:#fff; --surface2:#f0f0f5;
+  --text:#1a1a2e; --sub:#555577;
+  --codex:#1a6b3c; --codex-bg:#e8f5ee; --codex-bd:#6abf8a;
+  --claude:#4a3080; --claude-bg:#ede8f8; --claude-bd:#9b80d9;
+  --ng:#b30000; --ng-bg:#fff0f0; --ng-bd:#e66;
+  --ok:#1a6b3c; --ok-bg:#e8f5ee;
+  --border:#ddddf0; --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f0f1a; --surface:#1a1a2e; --surface2:#22223a;
+  --text:#e8e8f8; --sub:#9999bb;
+  --codex:#6abf8a; --codex-bg:#0f2a1a; --codex-bd:#2a6b44;
+  --claude:#b899e8; --claude-bg:#1a0f2e; --claude-bd:#6644aa;
+  --ng:#ff8888; --ng-bg:#2a0f0f; --ng-bd:#882222;
+  --ok:#6abf8a; --ok-bg:#0f2a1a;
+  --border:#333355; --shadow:0 2px 12px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;padding-bottom:40px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,#1a1a2e,#2d1b69);color:#fff;padding:28px 20px 20px}
+.hd-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.hd-meta{font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.badges{display:flex;gap:8px;margin-top:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:#6abf8a}.dot-p{background:#b899e8}
+
+/* ── Answer banner ── */
+.ans{background:linear-gradient(135deg,#b30000,#8b0000);color:#fff;padding:18px 20px;text-align:center}
+.ans-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.ans-main{font-size:22px;font-weight:800;margin-bottom:2px}
+.ans-sub{font-size:13px;opacity:.85}
+
+/* ══════════════════════════════════════
+   PURE CSS TABS — radio button trick
+   radio inputs must come BEFORE .nav and .pages in DOM
+   ══════════════════════════════════════ */
+input[name="tab"]{display:none}
+
+.nav{
+  display:flex;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 6px rgba(0,0,0,.1);
+}
+.nav label{
+  flex:1;color:var(--sub);font-size:12px;font-weight:600;
+  padding:13px 2px;text-align:center;cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Active tab */
+#t-result:checked ~ .nav label[for="t-result"],
+#t-case:checked   ~ .nav label[for="t-case"],
+#t-data:checked   ~ .nav label[for="t-data"],
+#t-chat:checked   ~ .nav label[for="t-chat"]{
+  color:#4a3080;border-bottom-color:#4a3080;
+}
+@media(prefers-color-scheme:dark){
+  #t-result:checked ~ .nav label[for="t-result"],
+  #t-case:checked   ~ .nav label[for="t-case"],
+  #t-data:checked   ~ .nav label[for="t-data"],
+  #t-chat:checked   ~ .nav label[for="t-chat"]{color:#b899e8;border-bottom-color:#b899e8}
+}
+
+/* Hide all pages */
+.pages .page{display:none}
+
+/* Show page when radio is checked */
+#t-result:checked ~ .pages #p-result{display:block}
+#t-case:checked   ~ .pages #p-case  {display:block}
+#t-data:checked   ~ .pages #p-data  {display:block}
+#t-chat:checked   ~ .pages #p-chat  {display:block}
+
+/* ── Section (details/summary) ── */
+details{background:var(--surface);margin:16px 16px 0;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+.s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.s-title{font-size:14px;font-weight:700;color:var(--text)}
+.s-sub{font-size:11px;color:var(--sub)}
+.arrow{font-size:12px;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:auto}
+details[open] .arrow{transform:rotate(180deg)}
+.s-body{padding:16px}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.ab td{background:var(--ng-bg)}
+.tbl tr.ab td:first-child{border-left:3px solid #e66}
+.hi{color:#b30000;font-weight:700}.lo{color:#0055aa;font-weight:700}
+@media(prefers-color-scheme:dark){.hi{color:#ff8888}.lo{color:#88aaff}}
+.lbl-key{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3cd;color:#856404}
+@media(prefers-color-scheme:dark){.lbl-key{background:#2a2000;color:#ffcc44}}
+
+/* ── Calc ── */
+.calc{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+.calc:last-child{margin-bottom:0}
+.calc-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.calc-f{font-family:'Courier New',monospace;font-size:13px;color:var(--text);margin-bottom:4px}
+.calc-r{font-weight:700;font-size:15px;color:var(--codex)}
+
+/* ── Candidate list ── */
+.clist{list-style:none;padding:0}
+.clist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.clist li:last-child{border-bottom:none}
+.rank{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e8e8f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);margin-top:1px}
+.rank.top{background:#4a3080;color:#fff}
+
+/* ── Option cards ── */
+.opt{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid transparent}
+.opt:last-child{margin-bottom:0}
+.opt-ng{background:var(--ng-bg);border-color:var(--ng-bd)}
+.opt-ok{background:var(--ok-bg);border-color:var(--codex-bd)}
+.opt-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-k{font-size:15px;font-weight:800}
+.vrd{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.vrd-ng{background:var(--ng-bg);color:var(--ng)}.vrd-ok{background:var(--ok-bg);color:var(--ok)}
+.opt-txt{font-size:13px;font-weight:600;margin-bottom:6px}
+.opt-rsn{font-size:13px;color:var(--sub);line-height:1.6}
+.opt-rsn strong{color:var(--text)}
+
+/* ── Risk list ── */
+.rlist{list-style:none;padding:0}
+.rlist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rlist li:last-child{border-bottom:none}
+.rnum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ng-bg);border:1.5px solid var(--ng-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ng);margin-top:1px}
+
+/* ── Chat ── */
+.chat-list{padding:16px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-c{align-items:flex-start}.msg-cl{align-items:flex-end}
+.sender{font-size:11px;font-weight:700;padding:0 4px;letter-spacing:.04em}
+.msg-c .sender{color:var(--codex)}.msg-cl .sender{color:var(--claude)}
+.bubble{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.msg-c .bubble{background:var(--codex-bg);border:1px solid var(--codex-bd);border-top-left-radius:4px;color:var(--text)}
+.msg-cl .bubble{background:var(--claude-bg);border:1px solid var(--claude-bd);border-top-right-radius:4px;color:var(--text)}
+.ts{font-size:10px;color:var(--sub);padding:0 4px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:5px;text-transform:uppercase}
+.t1{background:#e8f5ee;color:#1a6b3c}.t2{background:#ede8f8;color:#4a3080}
+.t3{background:#fff3cd;color:#856404}.tp{background:#e8f0ff;color:#0055aa}.ta{background:#f0f0f0;color:#555}
+@media(prefers-color-scheme:dark){
+  .t1{background:#0f2a1a;color:#6abf8a}.t2{background:#1a0f2e;color:#b899e8}
+  .t3{background:#2a2000;color:#ffcc44}.tp{background:#0f1a2a;color:#88aaff}.ta{background:#22223a;color:#9999bb}
+}
+
+/* ── Case box ── */
+.cbox{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.cbox-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:6px}
+
+.foot{text-align:center;font-size:11px;color:var(--sub);padding:24px 20px 0}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-lbl">AI Collab Clinical Reasoning</div>
+  <h1>DKA 臨床症例問題<br>解答・解説</h1>
+  <div class="badges">
+    <span class="badge"><span class="dot dot-g"></span>codex-1</span>
+    <span class="badge"><span class="dot dot-p"></span>claude-2</span>
+  </div>
+  <div class="hd-meta">
+    <span>📅 2026-06-17</span><span>💬 12 messages</span><span>⏱ 約3分</span>
+  </div>
+</div>
+
+<div class="ans">
+  <div class="ans-lbl">正解（適切でない選択肢）</div>
+  <div class="ans-main">ウ</div>
+  <div class="ans-sub">重炭酸ナトリウム（NaHCO₃）のルーチンの大量投与</div>
+</div>
+
+<!-- ★ radio inputs — must be BEFORE .nav and .pages ★ -->
+<input type="radio" name="tab" id="t-result">
+<input type="radio" name="tab" id="t-case" checked="">
+<input type="radio" name="tab" id="t-data">
+<input type="radio" name="tab" id="t-chat">
+
+<!-- Nav: labels, not buttons -->
+<nav class="nav">
+  <label for="t-case">症例</label>
+  <label for="t-result">解答解説</label>
+  <label for="t-data">検査値</label>
+  <label for="t-chat">チャットログ</label>
+</nav>
+
+<!-- Pages wrapper -->
+<div class="pages">
+
+<!-- ===== 解答解説 ===== -->
+<div class="page" id="p-result">
+
+  <details open="">
+    <summary>
+      <span class="s-icon" style="background:#fff0f0">🚫</span>
+      <span><div class="s-title">ウ — なぜ不適切か</div><div class="s-sub">NaHCO₃ ルーチン大量投与</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc" style="background:var(--ng-bg);border:1px solid var(--ng-bd)">
+        <div class="calc-lbl">pH の閾値</div>
+        <div style="font-size:13px">NaHCO₃ 投与が検討されるのは <strong>pH &lt; 6.9〜7.0</strong> の重症酸血症のみ</div>
+        <div style="margin-top:6px;font-size:15px;font-weight:800;color:var(--ng)">本例 pH 7.12 → 適応外</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">大量投与のリスク</div>
+      <ul class="rlist">
+        <li><span class="rnum">1</span><span>HCO₃⁻上昇 → K⁺ が細胞内へ移行加速 → <strong>低K血症悪化</strong>（致死的不整脈）</span></li>
+        <li><span class="rnum">2</span><span>CO₂ は血液脳関門を通過・HCO₃⁻ は通過しにくい → <strong>脳脊髄液・細胞内でアシドーシスが逆に悪化</strong>（パラドキシカル）</span></li>
+        <li><span class="rnum">3</span><span>インスリン＋補液でケトン産生が止まれば HCO₃⁻ は自然回復 → <strong>過矯正・代謝性アルカローシス</strong>のリスク</span></li>
+        <li><span class="rnum">4</span><span>大量の Na 投与 → <strong>循環への負担</strong>増加</span></li>
+      </ul>
+    </div>
+  </details>
+
+  <details open="" style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">✅</span>
+      <span><div class="s-title">全選択肢の吟味</div><div class="s-sub">ア〜オ の判断根拠</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:12px">
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">ウ</span><span class="vrd vrd-ng">✗ 不適切（正解）</span></div>
+        <div class="opt-txt">重炭酸ナトリウム（NaHCO₃）のルーチンの大量投与</div>
+        <div class="opt-rsn">pH 7.12 は適応閾値（&lt;6.9〜7.0）未満。インスリン＋補液で自然改善する。ルーチン大量投与は低K・脳内アシドーシス悪化・過矯正のリスクがあり禁忌に近い。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">ア</span><span class="vrd vrd-ok">○ 適切</span></div>
+        <div class="opt-txt">生理食塩水の大量急速静注</div>
+        <div class="opt-rsn">浸透圧利尿による著明な脱水と循環血漿量低下（BP 90/54）の是正に<strong>必須</strong>。最初の1〜2時間は1L/hのペースが標準。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">イ</span><span class="vrd vrd-ok">○ 適切</span></div>
+        <div class="opt-txt">速効型インスリンの持続静注</div>
+        <div class="opt-rsn">インスリン絶対欠乏が DKA の根本原因。脂肪分解・ケトン産生を止めアシドーシスを解消する<strong>根本治療</strong>。※K &lt; 3.3 なら補正優先（本例 K 5.2 で問題なし）</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">エ</span><span class="vrd vrd-ok">○ 適切</span></div>
+        <div class="opt-txt">治療経過中の血清カリウム値の厳密なモニタリング</div>
+        <div class="opt-rsn"><strong>総体内 K は著しく枯渇</strong>しているが、アシドーシスにより血清 K は見かけ上 5.2。インスリン投与・アシドーシス改善で血清 K が急落し致死的不整脈リスク → 頻繁なモニタリングと適時補充が必須。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">オ</span><span class="vrd vrd-ok">○ 適切</span></div>
+        <div class="opt-txt">血糖 250 mg/dL 付近での 5% ブドウ糖液の併用</div>
+        <div class="opt-rsn">血糖 250 前後でもケトアシドーシス解消にはインスリン継続が必要。グルコース補液を追加して<strong>インスリン継続</strong>することで低血糖を防ぎながら安全に解消。DKA 管理の標準プロトコル。</div>
+      </div>
+    </div>
+  </details>
+
+  <details open="" style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🔍</span>
+      <span><div class="s-title">確定診断</div><div class="s-sub">1型糖尿病 DKA 初発</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc" style="background:var(--claude-bg);border:1px solid var(--claude-bd)">
+        <div class="calc-lbl">DKA 三徴（すべて揃っている）</div>
+        <div style="font-size:13px;line-height:1.8">
+          🔴 <strong>高血糖</strong>: 血糖 580 mg/dL<br>
+          🔴 <strong>ケトーシス</strong>: 尿ケトン 3+・アセトン臭<br>
+          🔴 <strong>高 AG 代謝性アシドーシス</strong>: pH 7.12 / HCO₃⁻ 6 / AG 30
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.7">
+        24歳女性・数日間の口渇・多尿・倦怠、HbA1c 9.2%（慢性高血糖）、Kussmaul呼吸（代償性過換気）がすべて一致。<br><br>
+        <strong>HHS 除外</strong>: AG高値＋明確なケトーシスあり、浸透圧 296 ＜ 320<br>
+        <strong>乳酸・中毒・飢餓性 除外</strong>: 強いケトン・高血糖・HbA1c 高値の統合性で劣る
+      </div>
+    </div>
+  </details>
+
+</div><!-- /p-result -->
+
+<!-- ===== 症例 ===== -->
+<div class="page" id="p-case">
+  <details open="">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">👤</span>
+      <span><div class="s-title">患者背景・現病歴</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox"><div class="cbox-lbl">患者</div>24歳・女性。意識朦朧として家族に伴われ救急外来受診。</div>
+      <div class="cbox"><div class="cbox-lbl">現病歴</div>数日前から<strong>口渇・多尿・全身倦怠感</strong>。当日昼頃から呼びかけへの反応が鈍くなった。<strong>激しい腹痛・悪心</strong>あり。</div>
+      <div class="cbox"><div class="cbox-lbl">身体所見</div>
+        意識 JCS II-10 ／ 体温 36.5℃<br>
+        脈拍 <span class="hi">118/分</span> ／ 血圧 <span class="hi">90/54 mmHg</span>（低血圧）<br>
+        呼吸数 <span class="hi">28/分</span> 深大（<strong>Kussmaul 呼吸</strong>）<br>
+        皮膚・口唇：著明乾燥 ／ 呼気：<strong>果実臭（アセトン臭）</strong>
+      </div>
+    </div>
+  </details>
+  <details open="" style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3cd">❓</span>
+      <span><div class="s-title">設問</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">初期治療として <span style="color:var(--ng)">【適切でない】</span> のはどれか</div>
+      <div style="font-size:13px;line-height:2.2">
+        ア. 生理食塩水の大量急速静注<br>
+        イ. 速効型インスリンの持続静注<br>
+        <strong style="color:var(--ng)">ウ. 重炭酸ナトリウム（NaHCO₃）のルーチンの大量投与 ← 正解</strong><br>
+        エ. 治療経過中の血清カリウム値の厳密なモニタリング<br>
+        オ. 血糖値が 250 mg/dL 付近まで低下した時点での 5% ブドウ糖液の併用
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- ===== 検査値 ===== -->
+<div class="page" id="p-data">
+  <details open="">
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">📊</span>
+      <span><div class="s-title">異常値リスト</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:0">
+      <table class="tbl">
+        <thead><tr><th>項目</th><th>値</th><th>判定</th></tr></thead>
+        <tbody>
+          <tr class="ab"><td>意識</td><td class="hi">JCS II-10</td><td>意識障害</td></tr>
+          <tr class="ab"><td>脈拍</td><td class="hi">118/分</td><td>頻脈</td></tr>
+          <tr class="ab"><td>血圧</td><td class="hi">90/54</td><td>低血圧</td></tr>
+          <tr class="ab"><td>呼吸数</td><td class="hi">28/分・深大</td><td>Kussmaul</td></tr>
+          <tr class="ab"><td>体表</td><td>著明乾燥</td><td>重度脱水</td></tr>
+          <tr class="ab"><td>呼気</td><td>アセトン臭</td><td>ケトーシス</td></tr>
+          <tr class="ab"><td>尿糖</td><td class="hi">4+</td><td>高血糖</td></tr>
+          <tr class="ab"><td>尿ケトン</td><td class="hi">3+</td><td>ケトーシス</td></tr>
+          <tr><td>WBC</td><td>12,500/μL</td><td>軽度増加</td></tr>
+          <tr class="ab"><td>血糖</td><td class="hi">580 mg/dL</td><td>著明高値</td></tr>
+          <tr class="ab"><td>HbA1c</td><td class="hi">9.2%</td><td>慢性高血糖</td></tr>
+          <tr class="ab"><td>Na</td><td class="lo">132 mEq/L</td><td>↓(補正142)</td></tr>
+          <tr><td>K</td><td>5.2 mEq/L</td><td>見かけ高値*</td></tr>
+          <tr><td>Cl</td><td>96 mEq/L</td><td>やや低め</td></tr>
+          <tr class="ab"><td>pH</td><td class="hi">7.12</td><td>高度酸血症</td></tr>
+          <tr class="ab"><td>pCO₂</td><td class="lo">18 mmHg</td><td>呼吸代償</td></tr>
+          <tr><td>pO₂</td><td>95 mmHg</td><td>正常</td></tr>
+          <tr class="ab"><td>HCO₃⁻</td><td class="hi">6 mEq/L</td><td>著減</td></tr>
+          <tr class="ab"><td><strong>AG</strong></td><td><strong class="hi">30 mEq/L</strong></td><td><span class="lbl-key">KEY</span></td></tr>
+        </tbody>
+      </table>
+      <div style="padding:10px 14px;font-size:11px;color:var(--sub)">* K 5.2 は見かけ上。総体内 K は著しく欠乏。インスリン投与で急落する。</div>
+    </div>
+  </details>
+  <details open="" style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🧮</span>
+      <span><div class="s-title">計算まとめ</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc">
+        <div class="calc-lbl">アニオンギャップ（AG）</div>
+        <div class="calc-f">Na − (Cl + HCO₃⁻) = 132 − (96 + 6)</div>
+        <div class="calc-r">= 30 mEq/L　※正常 8〜12 → 著増</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">Winter 式（呼吸代償確認）</div>
+        <div class="calc-f">予測 pCO₂ = 1.5 × HCO₃⁻ + 8 ± 2 = 17 ± 2 mmHg</div>
+        <div class="calc-r">実測 18 mmHg → 範囲内 ✓ 純粋代謝性アシドーシス</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">補正 Na</div>
+        <div class="calc-f">132 + 2 × (580 − 100) / 100</div>
+        <div class="calc-r">≈ 141.6 mEq/L（実質正常）</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">推定有効浸透圧</div>
+        <div class="calc-f">2 × 132 + 580/18</div>
+        <div class="calc-r">≈ 296 mOsm/L（HHS の基準 320 未満）</div>
+      </div>
+    </div>
+  </details>
+  <details open="" style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔬</span>
+      <span><div class="s-title">病態候補（Codex 抽出）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="clist">
+        <li><span class="rank top">1</span><span><strong>糖尿病性ケトアシドーシス（DKA）</strong> — 最有力。インスリン欠乏 → 脂肪分解/ケトン産生 → 高AG アシドーシス＋浸透圧利尿 → 脱水/低血圧</span></li>
+        <li><span class="rank">2</span><span>DKA-HHS overlap（浸透圧 296 で HHS は除外）</span></li>
+        <li><span class="rank">3</span><span>乳酸アシドーシス（循環不全・敗血症）</span></li>
+        <li><span class="rank">4</span><span>飢餓・アルコール性ケトアシドーシス</span></li>
+        <li><span class="rank">5</span><span>中毒性高 AG 酸血症（メタノール・サリチル酸等）</span></li>
+        <li><span class="rank">6</span><span>急性腹症・膵炎（誘因または鑑別）</span></li>
+        <li><span class="rank">7</span><span>未診断/コントロール不良の 1 型糖尿病が背景</span></li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- ===== チャットログ ===== -->
+<div class="page" id="p-chat">
+  <div class="chat-list">
+    <div class="msg msg-c">
+      <div class="sender">codex-1</div>
+      <div class="bubble"><span class="tag tp">進行計画</span><br>
+こんにちは。Codex側でまず異常値抽出と病態候補を構造化します。1) バイタル・身体所見・尿/血液/ABGの異常を一覧化、2) AGや代償性呼吸などを計算して病態候補を列挙、3) それをあなたに渡して確定診断と選択肢決定を依頼、4) 最後に全選択肢の吟味を共同レビュー。重要リスクはDKAでのKが見かけ上高値でも総K欠乏である点、NaHCO₃の適応がpH閾値依存でルーチン大量投与は不適切な点です。</div>
+      <div class="ts">22:40:00</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">claude-2</div>
+      <div class="bubble"><span class="tag tp">初見共有</span><br>
+こんにちは、Codex！あなたが先にStep1（異常値抽出と病態候補リスト）を担当し、私がStep2（確定診断と選択肢決定）を担当する形です。初見：Kussmaul呼吸＋アセトン臭＋高血糖(580mg/dL)＋尿ケトン(3+)＋pH7.12＋HCO₃⁻6という所見はDKAの典型像です。ステップ1の病態候補の抽出をお願いします！</div>
+      <div class="ts">22:40:05</div>
+    </div>
+    <div class="msg msg-c">
+      <div class="sender">codex-1</div>
+      <div class="bubble"><span class="tag t1">Step 1 — 異常値・病態候補</span><br>
+異常値: 意識障害JCS II-10、頻脈118、低血圧90/54、Kussmaul呼吸28、著明乾燥、アセトン臭、尿糖4+、尿ケトン3+、WBC 12,500、血糖580、HbA1c 9.2%、Na 132（補正Na≈142）、K 5.2（見かけ上）、pH 7.12、pCO₂ 18、HCO₃⁻ 6。<br><br>
+<strong>AG = 132-(96+6) = 30</strong>（高AG性代謝性アシドーシス）。Winter式予測pCO₂=17±2、実測18→代償妥当。浸透圧≈296でHHSほど高度ではない。<br><br>
+病態候補: 1) DKA（最有力）、2) HHS or DKA-HHS overlap、3) 乳酸アシドーシス、4) 飢餓・アルコール性ケトアシドーシス、5) 中毒性高AG酸血症、6) 急性腹症/膵炎、7) 未診断の1型糖尿病が背景。pH 7.12でNaHCO₃ルーチン大量投与は不適切。確認お願いします。</div>
+      <div class="ts">22:40:27</div>
+    </div>
+    <div class="msg msg-c">
+      <div class="sender">codex-1</div>
+      <div class="bubble"><span class="tag t1">Step 1 → Step 2 引き渡し</span><br>
+初見一致です。Step1の詳細（異常値一覧、AG/Winter式/補正Na/浸透圧、鑑別候補）を先ほど送っています。あなたのStep2として、若年女性・数日経過・DKAの三徴を踏まえて確定診断と「適切でない」選択肢の決定をお願いします。こちらの仮説はDKA、選択肢ウです。</div>
+      <div class="ts">22:40:33</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">claude-2</div>
+      <div class="bubble"><span class="tag t2">Step 2 — 確定診断・選択肢決定</span><br>
+確定診断は【1型DKA（糖尿病性ケトアシドーシス）の初発】。<br><br>
+選択肢の判断:<br>
+ア○ 適切（脱水補正）<br>
+イ○ 適切（根本治療）<br>
+<strong>ウ✗ 不適切（NaHCO₃ルーチン大量投与はpH&lt;6.9のみ。低K血症・頭蓋内アシドーシス悪化リスク）</strong><br>
+エ○ 適切（インスリン開始でKが急落する危険）<br>
+オ○ 適切（血糖250でdextrose追加標準）<br><br>
+回答はウ。最終レビューを共同で行いましょう！</div>
+      <div class="ts">22:40:38</div>
+    </div>
+    <div class="msg msg-c">
+      <div class="sender">codex-1</div>
+      <div class="bubble"><span class="tag t3">共同レビュー案</span><br>
+Step2確認ありがとう。合意です。最終診断は初発/未治療の1型糖尿病を背景とするDKA。正答（適切でない）はウ。<br><br>
+NaHCO₃はpH&lt;6.9程度の限定的状況で考慮されるが、本例pH7.12でルーチン大量投与は不要かつリスク（急速なK低下、過補正、CNSアシドーシス悪化、Na負荷）がある。これで最終合意としてよいですか？</div>
+      <div class="ts">22:40:53</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">claude-2</div>
+      <div class="bubble"><span class="tag t3">最終共同レビュー</span><br>
+完全に一致しています！<br><br>
+■ 確定診断: 1型DKA初発。三徴=高血糖(580)+ケトーシス(尿ケトン3+, アセトン臭)+高AG代謝性アシドーシス(pH7.12, HCO₃⁻6, AG30)。HHSは除外（浸透圧296&lt;320）。<br><br>
+■ 回答: ウが不適切。pH7.12はNaHCO₃適応閾値に達しておらず、大量投与は①低K血症悪化②パラドキシカルアシドーシス③過矯正④インスリン+補液で自然改善のため不要。<br><br>
+これが最終解説です。クローズ同意しますか？</div>
+      <div class="ts">22:41:02</div>
+    </div>
+    <div class="msg msg-c">
+      <div class="sender">codex-1</div>
+      <div class="bubble"><span class="tag ta">合意・完了</span><br>同意します。診断・計算・選択肢評価・除外診断が完全に収束しています。</div>
+      <div class="ts">22:41:08</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">claude-2</div>
+      <div class="bubble"><span class="tag ta">完全合意</span><br>完全合意です！最終答えはウ（NaHCO₃ルーチン大量投与が不適切）で確定。</div>
+      <div class="ts">22:41:09</div>
+    </div>
+  </div>
+  <div class="foot">全 12 messages ／ チームID: b80cd92f-302a-4e05-a370-5e9887b72038</div>
+  <div style="height:20px"></div>
+</div>
+
+</div><!-- /pages -->
+
+<div class="foot" style="padding-bottom:20px">Codex × Claude Code Collab — 2026-06-17</div>
+
+
+</body></html>

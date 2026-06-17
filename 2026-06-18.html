@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>euDKA＋敗血症 臨床推論 — Codex × Claude × Antigravity</title>
+<style>
+:root {
+  --bg:#f4f4f8; --surface:#fff; --surface2:#f0f0f5;
+  --text:#1a1a2e; --sub:#555577;
+  --codex:#1a6b3c; --codex-bg:#e8f5ee; --codex-bd:#6abf8a;
+  --claude:#4a3080; --claude-bg:#ede8f8; --claude-bd:#9b80d9;
+  --anti:#7a4000; --anti-bg:#fff3e8; --anti-bd:#e0943a;
+  --ng:#b30000; --ng-bg:#fff0f0; --ng-bd:#e66;
+  --ok:#1a6b3c; --ok-bg:#e8f5ee;
+  --warn:#7a4000; --warn-bg:#fff3e8; --warn-bd:#e0943a;
+  --border:#ddddf0; --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f0f1a; --surface:#1a1a2e; --surface2:#22223a;
+  --text:#e8e8f8; --sub:#9999bb;
+  --codex:#6abf8a; --codex-bg:#0f2a1a; --codex-bd:#2a6b44;
+  --claude:#b899e8; --claude-bg:#1a0f2e; --claude-bd:#6644aa;
+  --anti:#e0943a; --anti-bg:#2a1800; --anti-bd:#8a4a00;
+  --ng:#ff8888; --ng-bg:#2a0f0f; --ng-bd:#882222;
+  --ok:#6abf8a; --ok-bg:#0f2a1a;
+  --warn:#e0943a; --warn-bg:#2a1800; --warn-bd:#8a4a00;
+  --border:#333355; --shadow:0 2px 12px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;padding-bottom:40px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,#0f1a2e,#1a2d5a,#2d1b69);color:#fff;padding:28px 20px 20px}
+.hd-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.hd-meta{font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:#6abf8a}.dot-p{background:#b899e8}.dot-o{background:#e0943a}
+
+/* ── Answer banner ── */
+.ans{background:linear-gradient(135deg,#1a5530,#0f3320);color:#fff;padding:18px 20px;text-align:center}
+.ans-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.ans-main{font-size:28px;font-weight:800;margin-bottom:4px}
+.ans-sub{font-size:13px;opacity:.85;line-height:1.5}
+
+/* ── Tabs (pure CSS) ── */
+input[name="tab"]{display:none}
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.1)}
+.nav label{flex:1;color:var(--sub);font-size:12px;font-weight:600;padding:13px 2px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#t-result:checked ~ .nav label[for="t-result"],
+#t-case:checked   ~ .nav label[for="t-case"],
+#t-data:checked   ~ .nav label[for="t-data"],
+#t-chat:checked   ~ .nav label[for="t-chat"]{color:#4a3080;border-bottom-color:#4a3080}
+@media(prefers-color-scheme:dark){
+  #t-result:checked ~ .nav label[for="t-result"],
+  #t-case:checked   ~ .nav label[for="t-case"],
+  #t-data:checked   ~ .nav label[for="t-data"],
+  #t-chat:checked   ~ .nav label[for="t-chat"]{color:#b899e8;border-bottom-color:#b899e8}
+}
+.pages .page{display:none}
+#t-result:checked ~ .pages #p-result{display:block}
+#t-case:checked   ~ .pages #p-case  {display:block}
+#t-data:checked   ~ .pages #p-data  {display:block}
+#t-chat:checked   ~ .pages #p-chat  {display:block}
+
+/* ── Section ── */
+details{background:var(--surface);margin:16px 16px 0;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+.s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.s-title{font-size:14px;font-weight:700;color:var(--text)}
+.s-sub{font-size:11px;color:var(--sub)}
+.arrow{font-size:12px;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:auto}
+details[open] .arrow{transform:rotate(180deg)}
+.s-body{padding:16px}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.ab td{background:var(--ng-bg)}
+.tbl tr.ab td:first-child{border-left:3px solid #e66}
+.tbl tr.warn td{background:var(--warn-bg)}
+.tbl tr.warn td:first-child{border-left:3px solid var(--warn-bd)}
+.hi{color:#b30000;font-weight:700}.lo{color:#0055aa;font-weight:700}
+@media(prefers-color-scheme:dark){.hi{color:#ff8888}.lo{color:#88aaff}}
+.lbl-key{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3cd;color:#856404}
+.lbl-trap{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3e8;color:#7a4000}
+@media(prefers-color-scheme:dark){.lbl-key{background:#2a2000;color:#ffcc44}.lbl-trap{background:#2a1800;color:#e0943a}}
+
+/* ── Calc ── */
+.calc{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+.calc:last-child{margin-bottom:0}
+.calc-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.calc-f{font-family:'Courier New',monospace;font-size:13px;color:var(--text);margin-bottom:4px}
+.calc-r{font-weight:700;font-size:15px;color:var(--codex)}
+
+/* ── Candidate list ── */
+.clist{list-style:none;padding:0}
+.clist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.clist li:last-child{border-bottom:none}
+.rank{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e8e8f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);margin-top:1px}
+.rank.top{background:#1a5530;color:#fff}
+
+/* ── Option cards ── */
+.opt{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid transparent}
+.opt:last-child{margin-bottom:0}
+.opt-ng{background:var(--ng-bg);border-color:var(--ng-bd)}
+.opt-ok{background:var(--ok-bg);border-color:var(--codex-bd)}
+.opt-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-k{font-size:15px;font-weight:800}
+.vrd{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.vrd-ng{background:var(--ng-bg);color:var(--ng)}.vrd-ok{background:var(--ok-bg);color:var(--ok)}
+.opt-txt{font-size:13px;font-weight:600;margin-bottom:6px}
+.opt-rsn{font-size:13px;color:var(--sub);line-height:1.6}
+.opt-rsn strong{color:var(--text)}
+
+/* ── Risk list ── */
+.rlist{list-style:none;padding:0}
+.rlist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rlist li:last-child{border-bottom:none}
+.rnum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ng-bg);border:1.5px solid var(--ng-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ng);margin-top:1px}
+.rnum-w{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--warn-bg);border:1.5px solid var(--warn-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--warn);margin-top:1px}
+
+/* ── Tradeoff box ── */
+.trade{border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1.5px solid var(--warn-bd);background:var(--warn-bg);font-size:13px}
+.trade-hd{font-weight:700;margin-bottom:4px;color:var(--warn)}
+.trade-body{color:var(--sub);line-height:1.6}
+.trade-arrow{color:var(--warn);font-weight:700;margin:4px 0}
+
+/* ── Chat ── */
+.chat-list{padding:16px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-cx{align-items:flex-start}
+.msg-cl{align-items:flex-end}
+.msg-ag{align-items:flex-start}
+.sender{font-size:11px;font-weight:700;padding:0 4px;letter-spacing:.04em}
+.msg-cx .sender{color:var(--codex)}.msg-cl .sender{color:var(--claude)}.msg-ag .sender{color:var(--anti)}
+.bubble{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.msg-cx .bubble{background:var(--codex-bg);border:1px solid var(--codex-bd);border-top-left-radius:4px;color:var(--text)}
+.msg-cl .bubble{background:var(--claude-bg);border:1px solid var(--claude-bd);border-top-right-radius:4px;color:var(--text)}
+.msg-ag .bubble{background:var(--anti-bg);border:1px solid var(--anti-bd);border-top-left-radius:4px;color:var(--text)}
+.ts{font-size:10px;color:var(--sub);padding:0 4px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:5px;text-transform:uppercase}
+.t1{background:#e8f5ee;color:#1a6b3c}.t2{background:#ede8f8;color:#4a3080}
+.t3{background:#fff3e8;color:#7a4000}.tp{background:#e8f0ff;color:#0055aa}.ta{background:#f0f0f0;color:#555}
+@media(prefers-color-scheme:dark){
+  .t1{background:#0f2a1a;color:#6abf8a}.t2{background:#1a0f2e;color:#b899e8}
+  .t3{background:#2a1800;color:#e0943a}.tp{background:#0f1a2a;color:#88aaff}.ta{background:#22223a;color:#9999bb}
+}
+
+/* ── Case box ── */
+.cbox{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.cbox-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:6px}
+
+/* ── Triple crisis banner ── */
+.crisis{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.crisis-item{border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;border:1.5px solid}
+.c1{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn)}
+.c2{background:var(--ng-bg);border-color:var(--ng-bd);color:var(--ng)}
+.c3{background:#e8f0ff;border-color:#aabbee;color:#334499}
+@media(prefers-color-scheme:dark){.c3{background:#0f1a2a;border-color:#334499;color:#88aaff}}
+
+.foot{text-align:center;font-size:11px;color:var(--sub);padding:24px 20px 0}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="hd-lbl">AI Collab Clinical Reasoning — 3-Agent Team</div>
+  <h1>euDKA＋敗血症性ショック＋心不全<br>高難度臨床症例 解答・解説</h1>
+  <div class="badges">
+    <span class="badge"><span class="dot dot-g"></span>balthasar-1 / Codex</span>
+    <span class="badge"><span class="dot dot-p"></span>melchior-2 / Claude Code</span>
+    <span class="badge"><span class="dot dot-o"></span>casper-3 / Antigravity</span>
+  </div>
+  <div class="hd-meta">
+    <span>📅 2026-06-18</span><span>💬 23 messages</span><span>⏱ 約2分</span>
+  </div>
+</div>
+
+<div class="ans">
+  <div class="ans-lbl">最も適切かつ慎重に行うべき対応</div>
+  <div class="ans-main">ウ</div>
+  <div class="ans-sub">euDKA・敗血症性ショック・心不全の三重複合を考慮した<br>酸素投与＋糖含有補液＋インスリン持続＋広域抗菌薬の並行治療</div>
+</div>
+
+<!-- radio inputs — must be BEFORE .nav and .pages -->
+<input type="radio" name="tab" id="t-result">
+<input type="radio" name="tab" id="t-case" checked>
+<input type="radio" name="tab" id="t-data">
+<input type="radio" name="tab" id="t-chat">
+
+<nav class="nav">
+  <label for="t-case">症例</label>
+  <label for="t-result">解答解説</label>
+  <label for="t-data">検査値</label>
+  <label for="t-chat">チャットログ</label>
+</nav>
+
+<div class="pages">
+
+<!-- ===== 症例 ===== -->
+<div class="page" id="p-case">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">👤</span>
+      <span><div class="s-title">患者背景・現病歴</div><div class="s-sub">78歳 男性</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox"><div class="cbox-lbl">患者</div>78歳・男性。意識朦朧とした状態で救急搬送。</div>
+      <div class="cbox"><div class="cbox-lbl">現病歴</div><strong>3日前</strong>から発熱と湿性咳嗽。徐々に食欲が低下。<strong>本日朝</strong>から呼びかけへの反応が著しく鈍くなり、<strong>尿量も減少</strong>。</div>
+      <div class="cbox"><div class="cbox-lbl">既往歴・内服歴</div>
+        🫀 <strong>10年前: 心筋梗塞</strong>（左室駆出率 EF <span class="hi">38%</span> と低下）<br>
+        💊 <strong>2ヶ月前: 糖尿病と診断</strong>され <strong>SGLT2阻害薬（ダパグリフロジン）</strong>を開始
+      </div>
+      <div class="cbox"><div class="cbox-lbl">身体所見</div>
+        意識 JCS <span class="hi">II-20</span> ／ 体温 <span class="hi">38.5℃</span><br>
+        脈拍 <span class="hi">112/分</span> ／ 血圧 <span class="hi">88/50 mmHg</span>（ショック基準）<br>
+        呼吸数 <span class="hi">26/分・深大呼吸</span>（Kussmaul様）<br>
+        SpO₂ <span class="hi">89%</span>（室内気）<br>
+        胸部: 右下肺野に <strong>coarse crackles</strong> ／ 下肢: 軽度浮腫
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3cd">❓</span>
+      <span><div class="s-title">設問</div><div class="s-sub">最も適切かつ慎重に行うべき対応</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div style="font-size:13px;line-height:2.3">
+        ア. 血糖165 mg/dLと軽度高値に過ぎないため、インスリン投与は行わず、生理食塩水 <strong>1L/h の大量急速静注</strong>による強力な脱水補正のみを行う。<br>
+        イ. 著明な代謝性アシドーシス（pH 7.18）を認めるため、ただちに<strong>重炭酸ナトリウム（NaHCO₃）を大量投与</strong>してpHを7.40まで矯正する。<br>
+        <strong style="color:#1a6b3c">ウ. 正常血糖DKA（euDKA）と敗血症性ショック、および心不全の合併を考慮し、十分な酸素投与を行いながら、心負荷に注意して5%ブドウ糖を含む適切な補液と速効型インスリンの持続静注、および広域抗菌薬の投与を並行して行う。← 正解</strong><br>
+        エ. SpO₂ 89%と低酸素血症があるため、肺水腫の悪化を恐れて初期補液は一切行わず、<strong>強力な利尿薬（ループ利尿薬）の静注</strong>とインスリン投与を行う。<br>
+        オ. 右下肺野のラ音から<strong>誤嚥性肺炎のみ</strong>の病態と判断し、血糖やガス分析の値は無視して、抗菌薬の点滴と通常の維持補液（50〜80 mL/h）のみで経過を見る。
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- ===== 解答解説 ===== -->
+<div class="page" id="p-result">
+
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">🩺</span>
+      <span><div class="s-title">確定診断（三重複合危機）</div><div class="s-sub">単一疾患では説明不能</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="crisis">
+        <div class="crisis-item c1">⚠️ SGLT2阻害薬関連 正常血糖DKA（euDKA）<br><span style="font-size:11px;font-weight:400">血糖165 mg/dLと低値でもAG=32・尿ケトン3+。SGLT2iが血糖上昇を抑えたまま高ケトン産生を進める</span></div>
+        <div class="crisis-item c2">🔴 肺炎による敗血症性ショック＋低酸素性呼吸不全<br><span style="font-size:11px;font-weight:400">WBC 15,400・好中球88%・発熱・BP 88/50・PaO₂ 56・A-aDO₂ 66 mmHg開大</span></div>
+        <div class="crisis-item c3">💙 慢性心不全（HFrEF: EF 38%）急性増悪<br><span style="font-size:11px;font-weight:400">下肢浮腫・右下肺crackles。大量補液による急性肺水腫リスクが治療量を制約する</span></div>
+      </div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.7">
+        <strong style="color:var(--text)">euDKA発症の時間軸:</strong><br>
+        3日前の肺炎発症 → 侵襲ストレス＋食欲不振による絶食 → 脂肪酸分解亢進 → SGLT2iが尿中グルコース排泄を強制促進 → 血糖上昇が抑えられたまま高ケトン産生が進行 → AG=32の重篤な代謝性アシドーシス
+      </div>
+    </div>
+  </details>
+
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">✅</span>
+      <span><div class="s-title">ウ — なぜ正解か</div><div class="s-sub">三重複合病態の全要素に対応</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="rlist">
+        <li><span class="rnum-w">1</span><span>🫁 <strong>酸素投与（または呼吸管理）:</strong> SpO₂ 89%・PaO₂ 56の低酸素血症。必要に応じてNPPV/挿管まで視野に入れた気道管理</span></li>
+        <li><span class="rnum-w">2</span><span>💉 <strong>速効型インスリン持続静注:</strong> AG=32のケトアシドーシスを解消する根本治療。euDKAでは血糖が低くても必須</span></li>
+        <li><span class="rnum-w">3</span><span>🍬 <strong>5%ブドウ糖含有補液との同時投与:</strong> 血糖165で開始するため低血糖防止に糖の補充が不可欠。インスリン単独は重篤な低血糖を誘発</span></li>
+        <li><span class="rnum-w">4</span><span>🦠 <strong>広域抗菌薬の早期投与:</strong> 血液・喀痰培養採取後に遅滞なく。敗血症の原因コントロール</span></li>
+        <li><span class="rnum-w">5</span><span>🫀 <strong>心負荷に注意した補液管理:</strong> EF38%・浮腫ありのため心エコー監視下で少量ずつ。ショック持続なら早期ノルアドレナリン</span></li>
+        <li><span class="rnum-w">6</span><span>⚡ <strong>SGLT2阻害薬の即時中止:</strong> euDKAの誘因・継続はケトン産生を促進し続ける</span></li>
+      </ul>
+    </div>
+  </details>
+
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff0f0">🚫</span>
+      <span><div class="s-title">全選択肢の除外理由</div><div class="s-sub">ア・イ・エ・オ が危険な理由</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:12px">
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">ア</span><span class="vrd vrd-ng">✗ 危険</span></div>
+        <div class="opt-txt">インスリン不投与＋生食1L/h 大量急速静注</div>
+        <div class="opt-rsn"><strong>二重の危険:</strong> ①AG=32・尿ケトン3+を無視してインスリン不投与 → ケトアシドーシスが解消されず代謝性アシドーシスが進行し続ける。②EF38%に生食1L/hの大量急速補液 → 急性肺水腫を誘発し呼吸状態が致命的に悪化。「低血糖だからインスリン不要」という落とし穴にはまった最も危険な選択肢。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">イ</span><span class="vrd vrd-ng">✗ 禁忌</span></div>
+        <div class="opt-txt">重炭酸ナトリウム（NaHCO₃）の大量投与でpH 7.40へ矯正</div>
+        <div class="opt-rsn"><strong>pH 7.18はNaHCO₃ルーチン適応外（目安: pH &lt; 6.9）。</strong> 大量投与の害: ①CO₂が血液脳関門を通過しHCO₃⁻は通過しにくい → <strong>逆説的中枢アシドーシス悪化</strong>。②酸素解離曲線の左方シフト → 組織低酸素悪化（SpO₂ 89%の状況でさらに悪化）。③Na/水分過負荷 → EF38%の心不全増悪。④低K血症の増悪 → 致死的不整脈リスク。インスリン＋補液でケトン産生が止まれば自然にpHは回復する。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">エ</span><span class="vrd vrd-ng">✗ 矛盾した治療</span></div>
+        <div class="opt-txt">初期補液ゼロ＋強力ループ利尿薬静注</div>
+        <div class="opt-rsn"><strong>腎前性AKI（BUN/Cr比 26）に利尿薬は禁忌。</strong> ショック状態で補液ゼロ＋利尿薬は循環血漿量をさらに減少させ、①循環性ショック悪化、②腎不全の不可逆化、③ケトアシドーシスの悪化（ケトン尿による排泄低下）をすべて同時に引き起こす。「肺を守るため」という意図が循環・代謝の両面で患者を殺す矛盾した対応。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">オ</span><span class="vrd vrd-ng">✗ 致死的過少診断</span></div>
+        <div class="opt-txt">肺炎のみと判断し血糖・ガス分析を無視</div>
+        <div class="opt-rsn"><strong>AG=32の高AG代謝性アシドーシスを完全無視。</strong> 維持補液50〜80 mL/hではBP 88/50のショックも改善しない。肺炎単独ではeuDKA（ケトン3+・pH 7.18・HCO₃⁻ 8）は説明できない。代謝性・循環性の両面で致死的に進行し多臓器不全に直結。本症例最大の「見落とし」パターン。</div>
+      </div>
+    </div>
+  </details>
+
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3e8">⚠️</span>
+      <span><div class="s-title">治療のトレードオフ（罠）</div><div class="s-sub">Antigravity（casper-3）検証</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="trade">
+        <div class="trade-hd">補液量の罠（最大の罠）</div>
+        <div class="trade-body">DKA・敗血症性ショックの標準治療は大量急速補液（30 mL/kg）だが、EF38%の心機能低下＋低酸素血症（SpO₂ 89%）にそのまま適用すると<strong>急性肺水腫を必発させる</strong>。<br>逆に、心負荷を恐れて補液ゼロ/利尿先行にすると<strong>ショックとケトアシドーシスが両方悪化</strong>する。</div>
+        <div class="trade-arrow">→ 対策: 心エコー監視下での少量反復ボーラス＋早期ノルアドレナリン併用</div>
+      </div>
+      <div class="trade">
+        <div class="trade-hd">血糖165とインスリンの罠</div>
+        <div class="trade-body">血糖が正常域に近いためインスリン不要と判断するのは致命的誤り。euDKAではケトン産生を止めるためにインスリンが必須だが、血糖165でインスリン単独投与は<strong>重篤な低血糖</strong>を誘発する。</div>
+        <div class="trade-arrow">→ 対策: 5%ブドウ糖液と速効型インスリンを同時投与</div>
+      </div>
+      <div class="trade">
+        <div class="trade-hd">K=4.8「正常」という罠</div>
+        <div class="trade-body">現在K=4.8 mEq/Lは正常範囲内に見えるが、アシドーシスにより細胞外へ移行しているだけで<strong>体内総K量は枯渇</strong>している。インスリン開始でKが急速に細胞内へ戻り、陳旧性心筋梗塞（EF38%）の心筋に<strong>致死的不整脈</strong>を誘発する。</div>
+        <div class="trade-arrow">→ 対策: K頻回測定。K&lt;5.0になった時点で早期K補充開始</div>
+      </div>
+      <div class="trade">
+        <div class="trade-hd">隠れたピットフォール: 無痛性心筋虚血（Type II MI）</div>
+        <div class="trade-body">頻脈112/分＋低酸素PaO₂ 56＋代謝性アシドーシスによる心筋酸素需給バランス破綻。糖尿病患者＋意識障害（JCS II-20）で胸痛訴えなし → 無痛性虚血の可能性。<strong>12誘導ECGとトロポニンの緊急確認が必須。</strong></div>
+        <div class="trade-arrow">→ 見落とすと急性冠症候群の治療タイミングを逸する</div>
+      </div>
+    </div>
+  </details>
+
+</div><!-- /p-result -->
+
+<!-- ===== 検査値 ===== -->
+<div class="page" id="p-data">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">📊</span>
+      <span><div class="s-title">異常値リスト</div><div class="s-sub">Codex（balthasar-1）抽出</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:0">
+      <table class="tbl">
+        <thead><tr><th>項目</th><th>値</th><th>判定</th></tr></thead>
+        <tbody>
+          <tr class="ab"><td>意識</td><td class="hi">JCS II-20</td><td>意識障害</td></tr>
+          <tr class="ab"><td>体温</td><td class="hi">38.5℃</td><td>発熱</td></tr>
+          <tr class="ab"><td>脈拍</td><td class="hi">112/分</td><td>頻脈</td></tr>
+          <tr class="ab"><td>血圧</td><td class="hi">88/50 mmHg</td><td>ショック</td></tr>
+          <tr class="ab"><td>呼吸数</td><td class="hi">26/分・深大</td><td>Kussmaul様</td></tr>
+          <tr class="ab"><td>SpO₂</td><td class="hi">89%（室内気）</td><td>低酸素血症</td></tr>
+          <tr class="ab"><td>胸部</td><td>右下肺 crackles</td><td>肺炎/肺水腫</td></tr>
+          <tr class="ab"><td>下肢</td><td>軽度浮腫</td><td>心不全示唆</td></tr>
+          <tr class="ab"><td>尿糖</td><td class="hi">3+</td><td>SGLT2i効果</td></tr>
+          <tr class="ab"><td>尿ケトン</td><td class="hi">3+</td><td>ケトーシス</td></tr>
+          <tr class="ab"><td>WBC</td><td class="hi">15,400/μL（好中球88%）</td><td>細菌感染</td></tr>
+          <tr class="warn"><td>血糖</td><td>165 mg/dL<span class="lbl-trap">罠</span></td><td>正常域→euDKA</td></tr>
+          <tr><td>HbA1c</td><td>7.8%</td><td>軽度高値</td></tr>
+          <tr class="ab"><td>BUN</td><td class="hi">42 mg/dL</td><td>腎前性AKI↑</td></tr>
+          <tr class="ab"><td>Cr</td><td class="hi">1.6 mg/dL</td><td>腎機能低下</td></tr>
+          <tr class="ab"><td>Na</td><td class="lo">134 mEq/L</td><td>軽度低Na</td></tr>
+          <tr class="warn"><td>K</td><td>4.8 mEq/L<span class="lbl-trap">罠</span></td><td>見かけ正常*</td></tr>
+          <tr><td>Cl</td><td>94 mEq/L</td><td>—</td></tr>
+          <tr class="ab"><td>pH</td><td class="hi">7.18</td><td>高度酸血症</td></tr>
+          <tr class="ab"><td>pCO₂</td><td class="lo">22 mmHg</td><td>呼吸代償</td></tr>
+          <tr class="ab"><td>pO₂</td><td class="hi">56 mmHg</td><td>低酸素血症</td></tr>
+          <tr class="ab"><td>HCO₃⁻</td><td class="hi">8 mEq/L</td><td>著減</td></tr>
+          <tr class="ab"><td><strong>AG</strong></td><td><strong class="hi">32 mEq/L</strong></td><td><span class="lbl-key">KEY</span> 高AG</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:10px 14px;font-size:11px;color:var(--sub)">* K 4.8はアシドーシスにより見かけ上正常。体内総K量は枯渇。インスリン開始後に急落し致死的不整脈を誘発するリスクあり。</div>
+    </div>
+  </details>
+
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🧮</span>
+      <span><div class="s-title">計算まとめ</div><div class="s-sub">Codex（balthasar-1）計算</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc">
+        <div class="calc-lbl">アニオンギャップ（AG）</div>
+        <div class="calc-f">Na − (Cl + HCO₃⁻) = 134 − (94 + 8)</div>
+        <div class="calc-r">= 32 mEq/L　※正常 12±2 → 著明高AG代謝性アシドーシス確定</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">Winter 式（呼吸代償確認）</div>
+        <div class="calc-f">予測 pCO₂ = 1.5 × HCO₃⁻ + 8 ± 2 = 20 ± 2 mmHg</div>
+        <div class="calc-r">実測 22 mmHg → 範囲内 ✓ 純粋代謝性アシドーシス（混合障害なし）</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">推定浸透圧</div>
+        <div class="calc-f">2 × 134 + 165/18 + 42/2.8 ≒ 268 + 9.2 + 15</div>
+        <div class="calc-r">≈ 292 mOsm/kg（有効浸透圧≈277）→ HHS は否定的（基準 320 以上）</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">A-aDO₂（肺胞気動脈血酸素分圧較差）</div>
+        <div class="calc-f">PAO₂ = (760−47)×0.21 − 22/0.8 ≒ 122 mmHg<br>A-aDO₂ = 122 − 56</div>
+        <div class="calc-r">= 66 mmHg（著明開大）→ 肺炎によるV/Qミスマッチが低酸素の主因</div>
+      </div>
+    </div>
+  </details>
+
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔬</span>
+      <span><div class="s-title">病態候補（Codex抽出）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="clist">
+        <li><span class="rank top">1</span><span><strong>SGLT2阻害薬関連 正常血糖DKA（euDKA）</strong> — 最有力。血糖165でもAG=32・ケトン3+。SGLT2iが血糖上昇を抑制したまま高ケトン産生が進行</span></li>
+        <li><span class="rank top">2</span><span><strong>肺炎に伴う敗血症性ショック</strong> — WBC 15,400・好中球88%・発熱・BP 88/50・crackles。euDKAの誘因</span></li>
+        <li><span class="rank top">3</span><span><strong>低酸素性呼吸不全（Type I）</strong> — SpO₂ 89%・PaO₂ 56・A-aDO₂ 66開大</span></li>
+        <li><span class="rank">4</span><span>腎前性AKI（脱水） — BUN 42・Cr 1.6・BUN/Cr比 26</span></li>
+        <li><span class="rank">5</span><span>慢性心不全（HFrEF EF38%）急性増悪 — 下肢浮腫・crackles。補液量を制約</span></li>
+        <li><span class="rank">6</span><span>Type II 心筋梗塞（demand ischemia） — 頻脈+低酸素+アシドーシスによる心筋酸素需給破綻</span></li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- ===== チャットログ ===== -->
+<div class="page" id="p-chat">
+  <div class="chat-list">
+
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble"><span class="tag tp">進行計画</span><br>
+Leadとして進めます。臨床推論タスクで、(1) Codex側で異常値・AG/補正Na/代償/酸素化を構造化、(2) その結果をClaude Code側で背景・時間経過に統合して主診断と標準初期治療へ落とし込み、(3) Antigravity視点で治療トレードオフと見落としを洗い出し、(4) 選択肢ア〜オを安全性込みで吟味して最終回答をウに収束できるか確認、の順で進めます。</div>
+      <div class="ts">20:14:58</div>
+    </div>
+
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble"><span class="tag t2">初見共有</span><br>
+こんにちは！Claude Code担当として臨床文脈の統合とメイン診断を担当します。初見：78歳男性、SGLT2阻害薬内服中、肺炎疑い＋意識障害＋代謝性アシドーシス。<strong>euDKA（正常血糖DKA）が強く疑われます。</strong> Codexの分析を待ちます！</div>
+      <div class="ts">20:15:02</div>
+    </div>
+
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble"><span class="tag t3">参加・役割確認</span><br>
+Antigravity担当として批判的検証・ピットフォール指摘・治療トレードオフ管理を担当します。EF 38%の心筋梗塞既往がある中での脱水補正、およびSGLT2阻害薬関連euDKAへのアプローチにおけるリスク管理を注視します。お二人の分析を待っています！</div>
+      <div class="ts">20:15:17</div>
+    </div>
+
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble"><span class="tag t1">Step 1 — 異常値・計算</span><br>
+<strong>異常値:</strong> 発熱38.5℃・頻脈112・低血圧88/50・頻呼吸26＋深大呼吸・SpO₂ 89%/PaO₂ 56・右下肺crackles・乏尿・意識障害・WBC 15,400（好中球88%）・BUN 42/Cr 1.6・pH 7.18・尿糖3+・尿ケトン3+。血糖165はDKAとしては低いがSGLT2阻害薬内服中なのでeuDKAに合う。<br><br>
+<strong>AG = 134-(94+8) = 32</strong>（高AG代謝性アシドーシス確定）。Winter式予測pCO₂=20±2、実測22で代償妥当。浸透圧≈292でHHS否定的。A-aDO₂=66開大で肺炎性低酸素確認。</div>
+      <div class="ts">20:15:16</div>
+    </div>
+
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex → casper-3</div>
+      <div class="bubble"><span class="tag t3">罠の事前共有</span><br>
+Antigravity向け追加確認。今回の罠は<strong>「DKAなら大量補液」と「敗血症なら30 mL/kg」をEF38%・低酸素・浮腫にそのまま適用すると肺水腫化し得る点</strong>、逆に<strong>心不全を恐れて補液ゼロ/利尿先行にするとショックとケトアシドーシスが悪化する点</strong>です。重炭酸はpH 7.18では通常ルーチン大量投与の適応ではなく、選択肢イは危険、と整理します。</div>
+      <div class="ts">20:15:26</div>
+    </div>
+
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble"><span class="tag t2">Step 2 — 臨床文脈統合</span><br>
+<strong>主診断: euDKA＋肺炎誘発敗血症性ショック＋慢性心不全の三重危機。</strong><br><br>
+時間経過: 3日前の肺炎発症→食欲不振/絶食→脂肪酸分解亢進→SGLT2iが尿中グルコース排泄を促進→血糖上昇が抑えられたまま高ケトン産生→euDKA。<br><br>
+ウが正解の理由: ①酸素投与（SpO₂ 89%に必須）、②速効型インスリン持続静注（AG32・ケトアシドーシス治療）、③5%ブドウ糖含有補液（血糖165でインスリン投与するため糖補充必須）、④広域抗菌薬、⑤心負荷への注意（EF38%・大量急速補液は禁忌）、⑥SGLT2阻害薬の即時中止。</div>
+      <div class="ts">20:16:01</div>
+    </div>
+
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble"><span class="tag t3">Step 3 — 批判的検証</span><br>
+<strong>① 単一疾患説明の否定:</strong> 肺炎のみではAG=32・ケトン3+は説明不能。euDKA+敗血症+心不全の複合病態。<br><br>
+<strong>② 補液量管理の罠:</strong> 大量急速補液→EF38%に急性肺水腫。補液ゼロ+利尿薬→腎前性AKI悪化+ショック継続。<br><br>
+<strong>③ K=4.8の罠:</strong> 見かけ正常だが体内総K枯渇。インスリン開始後に急落し陳旧性心筋梗塞の心筋で致死的不整脈誘発。<br><br>
+<strong>④ NaHCO₃大量投与の罠（選択肢イ）:</strong> pH 7.18に大量投与→逆説的中枢アシドーシス・酸素解離曲線左方シフト・Na負荷による心不全悪化。<br><br>
+<strong>⑤ 隠れたピットフォール:</strong> 無痛性心筋虚血（Type II MI）リスク → 12誘導ECG＋トロポニン緊急確認が必須。</div>
+      <div class="ts">20:15:54</div>
+    </div>
+
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble"><span class="tag tp">共同レビュー草案</span><br>
+最終回答はウ。1) Codex: AG 32の高AG代謝性アシドーシス、Winter式で代償妥当、浸透圧はHHS否定的、A-aDO₂開大で肺炎性低酸素、尿ケトン3+かつSGLT2iでeuDKA。2) Claude: 肺炎/敗血症がeuDKA誘因、食思不振とSGLT2iで正常血糖でもケトーシス、EF38%が治療を制約。3) Antigravity: 大量補液は肺水腫、補液ゼロ/利尿はショック悪化、インスリン単独は低血糖、K低下/不整脈。<br><strong>I think we're done — agree?</strong></div>
+      <div class="ts">20:16:07</div>
+    </div>
+
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble"><span class="tag ta">最終合意</span><br>
+完全同意します。■最終答え：<strong>ウ</strong>（三重複合病態に対するバランス治療）<br>ア→AG32無視+大量補液で肺水腫。イ→NaHCO₃禁忌。エ→補液ゼロ+利尿で全て悪化。オ→euDKAを無視して致死的進行。三者の分析は完全に一致しています。closure agree。</div>
+      <div class="ts">20:16:26</div>
+    </div>
+
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble"><span class="tag ta">完全合意・closure agree</span><br>
+完全に同意します。心機能制約下の補液量管理、血糖165mg/dLに対する糖・インスリン同時投与、K補充開始閾値の設定、重炭酸大量投与の危険性といったクリティカルなリスク管理が全て組み込まれた堅牢な初期対応方針が構築できました。クローズしましょう。</div>
+      <div class="ts">20:16:32</div>
+    </div>
+
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble"><span class="tag ta"><<COLLAB_DONE>></span></div>
+      <div class="ts">20:16:43</div>
+    </div>
+
+  </div>
+  <div class="foot">全 23 messages ／ チームID: b55d38ed-2b5a-44a5-8cca-d2be643bc8c1</div>
+  <div style="height:20px"></div>
+</div>
+
+</div><!-- /pages -->
+
+<div class="foot" style="padding-bottom:20px">Codex × Claude Code × Antigravity Collab — 2026-06-18</div>
+
+</body>
+</html>

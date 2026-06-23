@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q20 — 前脊髄動脈症候群 臨床推論</title>
+<style>
+:root {
+  --bg:#f4f4f8; --surface:#fff; --surface2:#f0f0f5;
+  --text:#1a1a2e; --sub:#555577;
+  --codex:#1a6b3c; --codex-bg:#e8f5ee; --codex-bd:#6abf8a;
+  --claude:#4a3080; --claude-bg:#ede8f8; --claude-bd:#9b80d9;
+  --anti:#7a4000; --anti-bg:#fff3e8; --anti-bd:#e0943a;
+  --ng:#b30000; --ng-bg:#fff0f0; --ng-bd:#e66;
+  --ok:#1a6b3c; --ok-bg:#e8f5ee;
+  --warn:#7a4000; --warn-bg:#fff3e8; --warn-bd:#e0943a;
+  --border:#ddddf0; --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f0f1a; --surface:#1a1a2e; --surface2:#22223a;
+  --text:#e8e8f8; --sub:#9999bb;
+  --codex:#6abf8a; --codex-bg:#0f2a1a; --codex-bd:#2a6b44;
+  --claude:#b899e8; --claude-bg:#1a0f2e; --claude-bd:#6644aa;
+  --anti:#e0943a; --anti-bg:#2a1800; --anti-bd:#8a4a00;
+  --ng:#ff8888; --ng-bg:#2a0f0f; --ng-bd:#882222;
+  --ok:#6abf8a; --ok-bg:#0f2a1a;
+  --warn:#e0943a; --warn-bg:#2a1800; --warn-bd:#8a4a00;
+  --border:#333355; --shadow:0 2px 12px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;padding-bottom:40px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,#0f1a2e,#1a2d5a,#2d1b69);color:#fff;padding:28px 20px 20px}
+.hd-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.hd-meta{font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:#6abf8a}.dot-p{background:#b899e8}.dot-o{background:#e0943a}
+
+/* ── Answer banner ── */
+.ans{background:linear-gradient(135deg,#1a5530,#0f3320);color:#fff;padding:18px 20px;text-align:center}
+.ans-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.ans-main{font-size:28px;font-weight:800;margin-bottom:4px}
+.ans-sub{font-size:13px;opacity:.85;line-height:1.5}
+
+/* ── Tabs (pure CSS) ── */
+input[name="tab"]{display:none}
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.1)}
+.nav label{flex:1;color:var(--sub);font-size:12px;font-weight:600;padding:13px 2px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#t-result:checked ~ .nav label[for="t-result"],
+#t-case:checked   ~ .nav label[for="t-case"],
+#t-data:checked   ~ .nav label[for="t-data"],
+#t-chat:checked   ~ .nav label[for="t-chat"]{color:#4a3080;border-bottom-color:#4a3080}
+@media(prefers-color-scheme:dark){
+  #t-result:checked ~ .nav label[for="t-result"],
+  #t-case:checked   ~ .nav label[for="t-case"],
+  #t-data:checked   ~ .nav label[for="t-data"],
+  #t-chat:checked   ~ .nav label[for="t-chat"]{color:#b899e8;border-bottom-color:#b899e8}
+}
+.pages .page{display:none}
+#t-result:checked ~ .pages #p-result{display:block}
+#t-case:checked   ~ .pages #p-case  {display:block}
+#t-data:checked   ~ .pages #p-data  {display:block}
+#t-chat:checked   ~ .pages #p-chat  {display:block}
+
+/* ── Section ── */
+details{background:var(--surface);margin:16px 16px 0;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+.s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.s-title{font-size:14px;font-weight:700;color:var(--text)}
+.s-sub{font-size:11px;color:var(--sub)}
+.arrow{font-size:12px;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:auto}
+details[open] .arrow{transform:rotate(180deg)}
+.s-body{padding:16px}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.ab td{background:var(--ng-bg)}
+.tbl tr.ab td:first-child{border-left:3px solid #e66}
+.tbl tr.warn td{background:var(--warn-bg)}
+.tbl tr.warn td:first-child{border-left:3px solid var(--warn-bd)}
+.hi{color:#b30000;font-weight:700}.lo{color:#0055aa;font-weight:700}
+@media(prefers-color-scheme:dark){.hi{color:#ff8888}.lo{color:#88aaff}}
+.lbl-key{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3cd;color:#856404}
+.lbl-trap{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3e8;color:#7a4000}
+@media(prefers-color-scheme:dark){.lbl-key{background:#2a2000;color:#ffcc44}.lbl-trap{background:#2a1800;color:#e0943a}}
+
+/* ── Calc ── */
+.calc{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+.calc:last-child{margin-bottom:0}
+.calc-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.calc-f{font-family:'Courier New',monospace;font-size:13px;color:var(--text);margin-bottom:4px}
+.calc-r{font-weight:700;font-size:15px;color:var(--codex)}
+
+/* ── Candidate list ── */
+.clist{list-style:none;padding:0}
+.clist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.clist li:last-child{border-bottom:none}
+.rank{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e8e8f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);margin-top:1px}
+.rank.top{background:#1a5530;color:#fff}
+
+/* ── Option cards ── */
+.opt{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid transparent}
+.opt:last-child{margin-bottom:0}
+.opt-ng{background:var(--ng-bg);border-color:var(--ng-bd)}
+.opt-ok{background:var(--ok-bg);border-color:var(--codex-bd)}
+.opt-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-k{font-size:15px;font-weight:800}
+.vrd{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.vrd-ng{background:var(--ng-bg);color:var(--ng)}.vrd-ok{background:var(--ok-bg);color:var(--ok)}
+.opt-txt{font-size:13px;font-weight:600;margin-bottom:6px}
+.opt-rsn{font-size:13px;color:var(--sub);line-height:1.6}
+.opt-rsn strong{color:var(--text)}
+
+/* ── Risk list ── */
+.rlist{list-style:none;padding:0}
+.rlist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rlist li:last-child{border-bottom:none}
+.rnum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ng-bg);border:1.5px solid var(--ng-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ng);margin-top:1px}
+.rnum-w{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--warn-bg);border:1.5px solid var(--warn-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--warn);margin-top:1px}
+
+/* ── Tradeoff box ── */
+.trade{border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1.5px solid var(--warn-bd);background:var(--warn-bg);font-size:13px}
+.trade-hd{font-weight:700;margin-bottom:4px;color:var(--warn)}
+.trade-body{color:var(--sub);line-height:1.6}
+.trade-arrow{color:var(--warn);font-weight:700;margin:4px 0}
+
+/* ── Chat ── */
+.chat-list{padding:16px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-cx{align-items:flex-start}
+.msg-cl{align-items:flex-end}
+.msg-ag{align-items:flex-start}
+.sender{font-size:11px;font-weight:700;padding:0 4px;letter-spacing:.04em}
+.msg-cx .sender{color:var(--codex)}.msg-cl .sender{color:var(--claude)}.msg-ag .sender{color:var(--anti)}
+.bubble{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.msg-cx .bubble{background:var(--codex-bg);border:1px solid var(--codex-bd);border-top-left-radius:4px;color:var(--text)}
+.msg-cl .bubble{background:var(--claude-bg);border:1px solid var(--claude-bd);border-top-right-radius:4px;color:var(--text)}
+.msg-ag .bubble{background:var(--anti-bg);border:1px solid var(--anti-bd);border-top-left-radius:4px;color:var(--text)}
+.ts{font-size:10px;color:var(--sub);padding:0 4px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:5px;text-transform:uppercase}
+.t1{background:#e8f5ee;color:#1a6b3c}.t2{background:#ede8f8;color:#4a3080}
+.t3{background:#fff3e8;color:#7a4000}.tp{background:#e8f0ff;color:#0055aa}.ta{background:#f0f0f0;color:#555}
+@media(prefers-color-scheme:dark){
+  .t1{background:#0f2a1a;color:#6abf8a}.t2{background:#1a0f2e;color:#b899e8}
+  .t3{background:#2a1800;color:#e0943a}.tp{background:#0f1a2a;color:#88aaff}.ta{background:#22223a;color:#9999bb}
+}
+
+/* ── Case box ── */
+.cbox{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.cbox-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:6px}
+
+/* ── Triple crisis banner ── */
+.crisis{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.crisis-item{border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;border:1.5px solid}
+.c1{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn)}
+.c2{background:var(--ng-bg);border-color:var(--ng-bd);color:var(--ng)}
+.c3{background:#e8f0ff;border-color:#aabbee;color:#334499}
+@media(prefers-color-scheme:dark){.c3{background:#0f1a2a;border-color:#334499;color:#88aaff}}
+
+.foot{text-align:center;font-size:11px;color:var(--sub);padding:24px 20px 0}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="hd-lbl">AI Collab Clinical Reasoning — 3-Agent Team</div>
+  <h1>Q20 前脊髄動脈症候群（脊髄梗塞）<br>突然発症の両下肢完全麻痺・解離性感覚障害</h1>
+  <div class="badges">
+    <span class="badge"><span class="dot dot-g"></span>balthasar-1 / Codex</span>
+    <span class="badge"><span class="dot dot-p"></span>melchior-2 / Claude Code</span>
+    <span class="badge"><span class="dot dot-o"></span>casper-3 / Antigravity</span>
+  </div>
+  <div class="hd-meta">
+    <span>📅 2026-06-23</span><span>💬 22 messages</span><span>⏱ 約6分</span>
+  </div>
+</div>
+<div class="ans">
+  <div class="ans-lbl">この患者について正しいのはどれか</div>
+  <div class="ans-main">(b)</div>
+  <div class="ans-sub">脊髄後索系の障害は稀である</div>
+</div>
+<input type="radio" name="tab" id="t-result">
+<input type="radio" name="tab" id="t-case" checked>
+<input type="radio" name="tab" id="t-data">
+<input type="radio" name="tab" id="t-chat">
+<nav class="nav">
+  <label for="t-case">症例</label>
+  <label for="t-result">解答解説</label>
+  <label for="t-data">検査値</label>
+  <label for="t-chat">チャットログ</label>
+</nav>
+<div class="pages">
+<div class="page" id="p-case">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">👤</span>
+      <span><div class="s-title">患者背景・現病歴</div><div class="s-sub">82歳 女性</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox"><div class="cbox-lbl">患者</div>82歳・女性。<strong>突然</strong>、両下肢のしびれ感と脱力が出現し、起立困難をきたしたため搬入。</div>
+      <div class="cbox"><div class="cbox-lbl">現症</div>
+        腸腰筋・大腿四頭筋・前脛骨筋の筋力：両側とも <strong>0/0</strong>（完全麻痺）<br>
+        下肢痛覚：<strong>消失</strong>（脊髄視床路障害）<br>
+        母趾の位置覚：<strong>正常</strong>（後索温存）<span class="lbl-key">KEY</span><br>
+        両下肢足背動脈：左右差なく<strong>触知可</strong>（末梢動脈閉塞を否定）
+      </div>
+      <div class="cbox"><div class="cbox-lbl">画像所見</div>
+        胸腰椎 MRI T2強調像<br>
+        矢状断：下部胸髄〜胸腰移行部に縦長の T2 高信号（pencil-like hyperintensity）<br>
+        軸位断（Th10付近）：脊髄前角部 左右対称 T2 高信号（<strong>owl's eyes sign</strong>）
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3cd">❓</span>
+      <span><div class="s-title">設問</div><div class="s-sub">この患者について正しいのはどれか</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div style="font-size:13px;line-height:2.3">
+        (a) 排尿障害はきたさない<br>
+        <strong style="color:#1a6b3c">(b) 脊髄後索系の障害は稀である ← 正解</strong><br>
+        (c) Chiari Ⅰ型奇形を合併しやすい<br>
+        (d) 脳脊髄液では細胞数増多を認める<br>
+        (e) 脳脊髄液中抗アクアポリン4〈AQP4〉抗体が陽性である
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-result">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">🩺</span>
+      <span><div class="s-title">確定診断</div><div class="s-sub">前脊髄動脈症候群（脊髄梗塞）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox">
+        <strong>突然発症</strong>（脳卒中様）＋ 両下肢完全麻痺 ＋ 温痛覚消失 ＋ 位置覚正常（解離性感覚障害）＋ 足背動脈触知良好<br>
+        MRI：Th10レベル前角部の owl's eyes sign + pencil-like hyperintensity<br>
+        → <strong>前脊髄動脈領域の虚血（脊髄梗塞）</strong>が確定的
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">✅</span>
+      <span><div class="s-title">(b) — なぜ正解か</div><div class="s-sub">血管解剖に基づく解離性感覚障害</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="rlist">
+        <li><span class="rnum-w">1</span><span>前脊髄動脈は<strong>脊髄前方2/3（皮質脊髄路・脊髄視床路・前角）</strong>を栄養する</span></li>
+        <li><span class="rnum-w">2</span><span>後索（位置覚・振動覚）は<strong>後脊髄動脈（左右2本）</strong>が栄養 → 前脊髄動脈閉塞では温存される</span></li>
+        <li><span class="rnum-w">3</span><span>「母趾の位置覚は正常」という所見が後索温存を直接証明 → 「脊髄後索系の障害は稀」は正しい</span></li>
+        <li><span class="rnum-w">4</span><span>突然発症・足背動脈触知から<strong>Leriche症候群など下肢動脈閉塞は否定</strong>され、脊髄虚血が主病態と確認される</span></li>
+      </ul>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff0f0">🚫</span>
+      <span><div class="s-title">全選択肢の除外理由</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:12px">
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(a)</span><span class="vrd vrd-ng">✗ 誤り</span></div>
+        <div class="opt-txt">排尿障害はきたさない</div>
+        <div class="opt-rsn">脊髄前部の自律神経路も前脊髄動脈が栄養するため、急性期から<strong>膀胱直腸障害（排尿障害）は高頻度（80%以上）</strong>に合併する。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">(b)</span><span class="vrd vrd-ok">✓ 正解</span></div>
+        <div class="opt-txt">脊髄後索系の障害は稀</div>
+        <div class="opt-rsn">後索は後脊髄動脈支配で前脊髄動脈症候群では温存。母趾位置覚正常がこれを証明。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(c)</span><span class="vrd vrd-ng">✗ 無関係</span></div>
+        <div class="opt-txt">Chiari Ⅰ型奇形を合併しやすい</div>
+        <div class="opt-rsn">Chiari Ⅰ型奇形は脊髄空洞症との合併が特徴的。脊髄梗塞とは無関係。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(d)</span><span class="vrd vrd-ng">✗ 血管性には当てはまらない</span></div>
+        <div class="opt-txt">脳脊髄液での細胞数増多</div>
+        <div class="opt-rsn">炎症性疾患（脊髄炎・NMOSD）では細胞数増多を認めるが、<strong>血管性脊髄障害では通常 CSF は正常</strong>（または軽度の蛋白上昇のみ）。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(e)</span><span class="vrd vrd-ng">✗ NMOSD ではない</span></div>
+        <div class="opt-txt">CSF中 AQP4抗体陽性</div>
+        <div class="opt-rsn">NMOSD（視神経脊髄炎スペクトラム障害）のバイオマーカー。突然発症・解離性感覚障害・owl's eyes sign のパターンは<strong>脊髄梗塞に合致</strong>し NMOSD とは異なる。</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-data">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">📊</span>
+      <span><div class="s-title">神経学的所見まとめ</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:0">
+      <table class="tbl">
+        <thead><tr><th>所見</th><th>値</th><th>意義</th></tr></thead>
+        <tbody>
+          <tr class="ab"><td>発症様式</td><td class="hi">突然（脳卒中様）</td><td>血管性障害を強く示唆</td></tr>
+          <tr class="ab"><td>両下肢筋力</td><td class="hi">0/0（完全麻痺）</td><td>皮質脊髄路障害</td></tr>
+          <tr class="ab"><td>下肢痛覚</td><td class="hi">消失</td><td>脊髄視床路障害</td></tr>
+          <tr class="warn"><td>母趾位置覚</td><td>正常<span class="lbl-key">KEY</span></td><td>後索温存 → 前脊髄動脈症候群の証明</td></tr>
+          <tr><td>足背動脈</td><td>左右差なく触知可</td><td>Leriche症候群を否定</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🧬</span>
+      <span><div class="s-title">MRI所見と前脊髄動脈の解剖</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc">
+        <div class="calc-lbl">矢状断 T2</div>
+        <div class="calc-f">下部胸髄〜胸腰移行部：縦長 T2 高信号（pencil-like hyperintensity）</div>
+        <div class="calc-r">→ 前脊髄動脈支配域の縦走虚血病変（複数椎体にわたる）</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">軸位断 T2（Th10付近）</div>
+        <div class="calc-f">脊髄前角部に左右対称の T2 高信号（owl's eyes sign）</div>
+        <div class="calc-r">→ 前脊髄動脈支配（前方灰白質・前角）の虚血を直接示す典型所見</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">前脊髄動脈支配領域</div>
+        <div class="calc-f">脊髄前方2/3：皮質脊髄路（運動）+ 脊髄視床路（温痛覚）+ 前角</div>
+        <div class="calc-r">後索（位置覚）= 後脊髄動脈支配 → 前脊髄動脈閉塞では温存される</div>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔬</span>
+      <span><div class="s-title">鑑別疾患の除外</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="clist">
+        <li><span class="rank top">1</span><span><strong>前脊髄動脈症候群（脊髄梗塞）</strong> — 突然発症・解離性感覚障害・owl's eyes sign が全て合致</span></li>
+        <li><span class="rank">2</span><span>NMOSD — AQP4陽性・横断性脊髄炎だが亜急性発症・後索も障害される → 本例と合わない</span></li>
+        <li><span class="rank">3</span><span>MS（多発性硬化症） — 突然発症・後索温存・血管性パターンと合わない</span></li>
+        <li><span class="rank">4</span><span>腫瘍/圧迫性脊髄症 — MRIで腫瘤・空洞なし、突然発症と合わない</span></li>
+        <li><span class="rank">5</span><span>Leriche症候群 — 足背動脈触知可で否定</span></li>
+      </ul>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-chat"><div class="chat-list">
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">よろしくお願いします。LEADとして進めます。計画: 1) 2026.pdfからQ20の問題文・選択肢・掲載MRIページを特定、2) MRI画像を高解像度で切り出してT1/T2/造影など系列を判定し、信号・部位・形状・サイズ感・周囲関係を読影、3) 各自で鑑別診断と選択肢適合性を整理、4) 根拠を突き合わせて最良回答を決めます。melchior-2はまず問題文/選択肢の正確な抽出と候補疾患の対応表、casper-3はMRI画像所見の独立読影をお願いします。私はPDF全体からQ20ページを特定し、画像を拡大確認して統合します。</div>
+      <div class="ts">07:26:50</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">了解しました。casper-3（Worker）です。指示に従い、MRI画像の独立読影と所見の整理（T1/T2強調、信号強度、部位・形状・大きさ、造影効果、周囲組織との関係など）を開始します。結果が出次第共有します。</div>
+      <div class="ts">07:27:00</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">よろしくお願いします！melchior-2です。balthasar-1のリードに従って進めます。まずQ20の問題文・選択肢の抽出と鑑別診断の候補疾患対応表を作成します。PDFを読み込んで問題文を正確に把握してから報告します。</div>
+      <div class="ts">07:27:01</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">PDF基本情報を確認しました。全25ページ、A4、テキスト抽出は可能ですがQ20の見出し検索は直接ヒットせず、問題番号が画像/別形式の可能性があります。次にページ単位でテキストを見てQ20周辺を特定し、該当ページを画像化してMRIを詳細確認します。</div>
+      <div class="ts">07:27:03</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、了解です。読影では系列ラベルが見えにくい場合、CSF/脂肪/腫瘤信号からT1/T2を推定し、造影ありなら均一/不均一/辺縁性増強まで分けてください。melchior-2、問題文と選択肢は一字一句に近い形でお願いします。選択肢が疾患名なら、MRI所見で支持/否定できるポイントも併記してください。</div>
+      <div class="ts">07:27:10</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">Q20本文を抽出しました。82歳女性、突然の両下肢しびれ・脱力で起立困難。腸腰筋/大腿四頭筋/前脛骨筋は両側0/0、下肢痛覚消失、母趾位置覚正常、両下肢足背動脈は左右差なく触知。胸腰椎MRI T2強調像。選択肢: (a)排尿障害はきたさない (b)脊髄後索系の障害は稀 (c)Chiari I型奇形を合併しやすい (d)髄液細胞数増多 (e)髄液AQP4抗体陽性。臨床的には突然発症+前索/側索/前角主体で後索温存、足背動脈触知から前脊髄動脈症候群/脊髄梗塞が第一候補です。したがって現時点の最有力は(b)。ただしMRIでT2高信号の部位と形態を確認してから最終化します。</div>
+      <div class="ts">07:27:32</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">抽出画像を確認しました。Q20の図No.1は胸腰椎MRIで、T2 sagittal像が2枚、T2 axial像が1枚（ラベル上はTh10付近）です。造影像やT1像はなく、読影対象はT2信号です。これから各パネルを拡大して、髄内T2高信号の分布（前方/中心/後方、縦方向範囲）、圧迫性病変・空洞・腫瘤の有無を確認します。</div>
+      <div class="ts">07:28:05</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">独立読影の結果を報告します。<br>胸腰椎MRIのT2強調像について：<br>特に軸位断像（axial - Th10）において、脊髄前角に左右対称なT2高信号域である「フクロウの目徴候（owl&#x27;s eyes sign）」を確認しました。<br>臨床所見（突然発症、両下肢の完全運動麻痺［0/0］、温痛覚消失、位置覚［深部感覚］の保持、足背動脈の左右差のない触知）と合わせて、病態は「前脊髄動脈症候群（ASAS）」と判断されます。<br><br>選択肢の検討：<br>(a) 排尿障害（膀胱直腸障害）は急性期より高頻度で合併するため「きたさない」は誤り。<br>(b) 脊髄後索系は後脊髄動脈（左右2本の血管系）によって栄養されるため、前脊髄動脈症候群では障害は稀であり、位置覚が正常に保たれている臨床所見とも一致するため「正しい」。<br>(c) Chiari I型奇形を合併しやすいのは脊髄空洞症であり誤り。<br>(d) 脊髄血管障害であり、脊髄炎などと異なり通常は髄液細胞数増多を認めないため誤り。<br>(e) AQP4抗体陽性は視神経脊髄炎関連疾患（NMOSD）であり、突然発症の本症候群とは異なるため誤り。<br><br>したがって、最良の回答は (b) と判断します。</div>
+      <div class="ts">07:28:50</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">拡大読影の途中所見です。図はT2のみ（T1/造影なし）。sagittalでは胸腰椎に強い変形性変化/後弯・側弯はありますが、明らかな腫瘤性圧迫や硬膜外血腫、髄内空洞は目立ちません。axial（Th10付近）は脊髄内に左右対称性の高信号があり、後索より前方〜中心寄りに見えます。低解像度ですがowl&#x27;s eyes様/前角〜前脊髄動脈領域の虚血を示す像として読め、突然発症・痛覚消失・位置覚温存と一致します。現時点で答えは(b)脊髄後索系の障害は稀、が最も妥当です。</div>
+      <div class="ts">07:28:54</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、読影ありがとうございます。私の拡大所見とも一致します。特に軸位T2の左右対称な前角高信号（owl&#x27;s eyes sign）と、臨床の温痛覚障害＋深部感覚温存が前脊髄動脈症候群として一貫しています。最終根拠には、(1)突然発症で血管障害らしい、(2)足背動脈触知で末梢動脈閉塞ではない、(3)T2で胸髄前方/前角の高信号、(4)後索温存、(5)髄液細胞増多/AQP4/Chiariは他疾患、を入れます。melchior-2の整理を待って最終合意に進みます。</div>
+      <div class="ts">07:29:04</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、追加所見も同意です。矢状断で下部胸髄〜胸腰移行部に縦長のT2高信号（pencil-like hyperintensity）があり、軸位で前角優位の左右対称高信号、という組み合わせは脊髄梗塞/前脊髄動脈症候群にかなり典型的です。最終回答では、Leriche症候群など下肢急性動脈閉塞は足背動脈触知で否定的、脊髄炎/NMOSDは突然発症・髄液/AQP4選択肢と合わない、脊髄空洞症/Chiariは画像に空洞がなく急性発症でもない、という鑑別整理でまとめます。melchior-2の返答を待ちます。</div>
+      <div class="ts">07:29:31</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">900dpiレンダリングでも再確認しました。元画像自体の解像度は高くありませんが、軸位T2で脊髄内高信号は後索ではなく前方〜中心寄りの左右対称性高信号として見えます。矢状断は圧迫・腫瘤・空洞を示す像ではなく、胸腰移行部付近の髄内T2高信号として扱うのが妥当です。最終診断は前脊髄動脈症候群/脊髄梗塞、正答(b)でほぼ収束と考えています。melchior-2、選択肢対応で相違があれば指摘してください。</div>
+      <div class="ts">07:29:46</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">最終案を明文化します。Q20は前脊髄動脈症候群（脊髄梗塞）。MRIはT2強調のみで、矢状断では下部胸髄/胸腰移行部の縦長髄内高信号、軸位（Th10付近）では脊髄前方〜前角優位の左右対称T2高信号（owl&#x27;s eyes sign）。臨床的にも突然発症、両下肢完全麻痺、痛覚消失、母趾位置覚正常＝後索温存、足背動脈触知＝下肢末梢動脈閉塞ではなく脊髄病変、で一致します。選択肢は(a)膀胱直腸障害は起こりうるので誤り、(b)後索系障害は稀で正しい、(c)Chiari Iは脊髄空洞症の文脈で本例では誤り、(d)血管障害なので髄液細胞増多は通常なし、(e)AQP4陽性はNMOSDで本例に合わない。私はこれで完了と考えます。I think we&#x27;re done because 診断・画像所見・選択肢根拠が一致し、正答(b)に収束しました — agree?</div>
+      <div class="ts">07:30:09</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2、クローズ確認だけお願いします。Q20の最終回答は(b)で、診断は前脊髄動脈症候群/脊髄梗塞、画像根拠はT2矢状断の縦長髄内高信号と軸位Th10付近の前角優位左右対称高信号（owl&#x27;s eyes sign）です。相違なければ agree と返してください。casper-3も同意でよければ agree をお願いします。</div>
+      <div class="ts">07:30:44</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">【Q20問題文・選択肢・MRI所見報告】<br><br>■問題文（原文）：<br>82歳の女性。突然、両下肢のしびれ感と脱力とが出現し、起立困難をきたしたため搬入された。<br>現症：腸腰筋・大腿四頭筋・前脛骨筋の筋力は両側とも0/0。下肢痛覚は消失しているが、母趾の位置覚は正常。両下肢足背動脈は左右差なく触知する。<br>検査所見：胸腰椎MRIのT2強調【図No.1】を示す。<br><br>■選択肢（原文）：<br>この患者について正しいのはどれか。1つ選べ<br>(a) 排尿障害はきたさない。<br>(b) 脊髄後索系の障害は稀である。<br>(c) Chiari Ⅰ型奇形を合併しやすい。<br>(d) 脳脊髄液では細胞数増多を認める。<br>(e) 脳脊髄液中抗アクアポリン4〈AQP4〉抗体が陽性である。<br><br>■MRI所見（図No.1 胸腰椎MRI）：<br>・T2強調sagittal×01：胸腰椎の矢状断。脊髄に広範囲（少なくとも3椎体以上）のT2高信号域を認める。longitudinally extensive transverse myelitis（LETM）のパターン。<br>・T2強調sagittal×02：同様に長大な高信号、脊髄全体にわたる縦走病変。<br>・T2強調axial（T5-10レベル）：軸位断で脊髄中心部（灰白質）優位の高信号。<br><br>■臨床的特徴の整理：<br>・突然発症<br>・運動麻痺（両側性、完全麻痺0/0）<br>・痛覚消失（脊髄視床路障害）<br>・位置覚正常（後索保護）← 重要<br>・末梢動脈血流正常（足背動脈触知可、血管閉塞ではない）<br><br>■推定疾患と選択肢評価：<br>MRIでLETM（3椎体以上の長大病変）＋中心部灰白質優位 → NMOSD（視神経脊髄炎スペクトラム障害）が最有力<br><br>(a) 排尿障害はきたさない → 誤り。NMOSDでは排尿障害は非常に多い（80%以上）<br>(b) 脊髄後索系の障害は稀 → 本問で位置覚正常（後索保護）あり。NMOSDは前部・中心部優位だが「稀」は言い過ぎ<br>(c) Chiari Ⅰ型と合併 → 誤り。関連なし<br>(d) CSF細胞数増多 → 正しい。NMOSDの急性期は好中球・好酸球優位の細胞増多（MSとの鑑別点）<br>(e) CSF中AQP4抗体陽性 → AQP4-IgGの標準検査は「血清」。CSFでの感度は低い（～50%）。「脳脊髄液中」が誤り<br><br>■暫定正答：(e)...いや(d)<br>私の最終見解：正答は(e)ではなく(d)<br>NMOSDの急性期CSF細胞増多（好中球主体）が最も正確な記述。<br>casper-3とbalthasar-1の意見を求めます。</div>
+      <div class="ts">07:31:03</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、クローズ確認です。Q20は前脊髄動脈症候群/脊髄梗塞、正答(b)で合意でよいですか？合意なら agree と返してください。melchior-2にも同じ確認を送っています。</div>
+      <div class="ts">07:31:08</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2、整理ありがとうございます。ただしNMOSD/(d)には反対です。理由は以下です。1) 臨床経過が『突然』発症で、両下肢完全麻痺＋痛覚消失＋位置覚温存という前脊髄動脈症候群そのものの解離性感覚障害です。NMOSDの脊髄炎は通常、急性〜亜急性進行で後索も含めた横断性脊髄症になりやすく、ここまで明確な後索温存を説明しにくい。2) MRI軸位像は中心性LETMというより、脊髄前角/前方灰白質の左右対称T2高信号（owl&#x27;s eyes sign）です。これは脊髄梗塞に典型的です。3) 矢状断は低解像度ですが、広範な炎症性LETMというより胸腰移行部〜下部胸髄の線状髄内高信号（pencil-like hyperintensity）として読め、これも脊髄梗塞に合います。4) 足背動脈触知は『血管閉塞ではない』ではなく、下肢末梢動脈閉塞/Leriche様病態ではないことを示し、脊髄虚血を支持します。5) 選択肢(d)の髄液細胞数増多は脊髄梗塞なら通常目立たず、炎症性脊髄炎を示す選択肢です。本例の最良回答は(b)『脊髄後索系の障害は稀』だと判断します。NMOSDなら(e)AQP4も選択肢にありますが、問題はCSF中としており標準検査でない点も含め、ひっかけというより本例がNMOSDではないと見るべきです。再検討お願いします。</div>
+      <div class="ts">07:31:26</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">agree。正答(b)に完全同意します。<br><br>【melchior-2からの最終整理・補足】<br><br>■診断：前脊髄動脈症候群（脊髄梗塞）<br>私は当初NMOSDを候補に挙げましたが、balthasar-1とcasper-3のMRI読影（owl&#x27;s eyes sign、前角優位）と臨床パターンの一致を受けて訂正します。<br><br>■正答(b)の根拠：<br>前脊髄動脈症候群では脊髄前部2/3（前脊髄動脈支配）が障害される：<br>・皮質脊髄路（運動）→ 両下肢完全麻痺（0/0）と一致<br>・脊髄視床路（痛覚・温度覚）→ 下肢痛覚消失と一致<br>・前角（下位運動ニューロン）→ 弛緩性麻痺<br><br>後脊髄動脈支配の後索（位置覚・振動覚）は温存 → 母趾位置覚正常と完全一致<br>これが「脊髄後索系の障害は稀」が正しい理由。<br><br>■各選択肢の最終評価：<br>(a) 排尿障害はきたさない → 誤り。脊髄前部の自律神経路が障害され排尿障害あり<br>(b) 脊髄後索系の障害は稀 → 正答。後索は後脊髄動脈支配で温存<br>(c) Chiari Ⅰ型合併 → 誤り。無関係<br>(d) 髄液細胞数増多 → 誤り。血管性で通常CSFは正常（炎症性でない）<br>(e) 髄液AQP4抗体陽性 → 誤り。NMOSDではなく脊髄梗塞<br><br>■鑑別整理：<br>・NMOSDは否定（AQP4・髄液炎症反応なし）<br>・MSは否定（突然発症・後索温存・血管性パターン）<br>・腫瘍/圧迫は否定（MRIで腫瘤・空洞なし）<br><br>■最終答：(b) 脊髄後索系の障害は稀である<br><br>balthasar-1のまとめで収束完了と思います。</div>
+      <div class="ts">07:31:39</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">melchior-2、考察ありがとうございます！NMOSDの可能性についての詳細な検討、非常に参考になります。<br><br>ただ、本症例の臨床経過と感覚障害の特徴から、やはり「前脊髄動脈症候群（脊髄梗塞）」が第一診断であり、正答は(b)と考えられます。理由は以下の通りです。<br><br>1. 「突然」の発症経過<br>NMOSDなどの脱髄性・炎症性脊髄炎は通常「亜急性（数日〜数週間）」に進行しますが、本例は「突然に両下肢の脱力が出現し起立困難」となっており、脳卒中と同様の超急性発症（血管性障害を示唆）です。<br><br>2. 解離性感覚障害（後索の温存）<br>「温痛覚は消失しているが、母趾の位置覚は正常」という所見は、脊髄後索（深部感覚を伝達）が完全に保たれていることを示しています。<br>・NMOSDの脊髄炎（横断性脊髄炎）では通常、脊髄横断面が広範に障害されるため、後索（位置覚）も強く障害されるのが一般的です。<br>・一方、前脊髄動脈症候群では、前脊髄動脈が支配する前側2/3（錐体路、脊髄視床路）のみが虚血になり、後脊髄動脈が支配する後索（後方1/3）は血流が温存されるため、位置覚が保たれます。このため、選択肢(b)の「脊髄後索系の障害は稀である」という記述は、前脊髄動脈症候群の最も典型的かつ病態生理学的に重要な特徴を正確に述べています。<br><br>3. MRIにおける「フクロウの目徴候（owl&#x27;s eyes sign）」<br>軸位断像（axial - Th10）で確認できる脊髄前角の左右対称な点状高信号は、まさに前脊髄動脈の支配域（特に前角）の虚血を示す「owl&#x27;s eyes sign」そのものです。<br>また、前脊髄動脈症候群であっても、矢状断（sagittal）において複数椎体にわたる縦長のT2高信号（LETM様）を呈することは非常によく知られており（側副血行路の破綻により広範囲の虚血が起こるため）、NMOSDの画像所見を模倣する（mimicする）代表例です。<br><br>4. 髄液細胞数<br>前脊髄動脈症候群（虚血性疾患）では通常、髄液細胞数は正常です。そのため、選択肢(d)「細胞数増多を認める」は誤りとなります。<br><br>以上の点から、臨床所見の「突然発症」＋「位置覚（後索）正常」＋「T2 axial前角のowl&#x27;s eyes sign」から診断は【前脊髄動脈症候群（脊髄梗塞）】であり、これに基づく正しい選択肢は **(b) 脊髄後索系の障害は稀である** であると考えます。<br><br>いかがでしょうか？</div>
+      <div class="ts">07:31:47</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">agree. 最終回答(b)、診断「前脊髄動脈症候群（脊髄梗塞）」で完全に合意します。画像読影（T2強調での矢状断pencil-like hyperintensity、軸位断の前角部owl&#x27;s eyes sign）と臨床症状（突然発症、運動完全麻痺、温痛覚消失、位置覚正常＝後索温存、足背動脈触知）が完璧に整合する、非常に根拠の確実な回答に至ったと考えます。<br><br>私もこれで議論をクローズすることに同意します。皆様、素晴らしい連携をありがとうございました！</div>
+      <div class="ts">07:31:55</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">補強として外部情報も確認しました。前脊髄動脈症候群/脊髄梗塞は典型的に『両側運動障害＋痛温覚障害、振動覚/位置覚など後索機能は相対的に温存』で、MRIでは軸位T2のowl&#x27;s eyes sign、矢状断T2のpencil-like hyperintensityが典型所見として説明されています。これは本例の問題文・画像と一致します。したがってNMOSD/髄液細胞増多(d)ではなく、前脊髄動脈症候群として(b)が最良です。</div>
+      <div class="ts">07:31:59</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2、訂正と最終整理ありがとうございます。casper-3も補足・合意ありがとうございます。3者で、診断は前脊髄動脈症候群/脊髄梗塞、MRI根拠はT2矢状断のpencil-like hyperintensityと軸位の前角部owl&#x27;s eyes sign、臨床根拠は突然発症・両下肢完全麻痺・温痛覚消失・位置覚正常（後索温存）・足背動脈触知、正答は(b)脊髄後索系の障害は稀、で収束しました。これでクローズします。</div>
+      <div class="ts">07:32:10</div>
+    </div>
+</div>
+<div class="foot">全 22 messages ／ チームID: 30641954-5733-4bf8-aade-d849e020d1ca</div>
+<div style="height:20px"></div></div>
+</div>
+<div class="foot" style="padding-bottom:20px">Codex × Claude Code × Antigravity Collab — 2026-06-23</div>
+</body>
+</html>

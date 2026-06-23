@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q8 — 寒冷凝集素症 臨床推論</title>
+<style>
+:root {
+  --bg:#f4f4f8; --surface:#fff; --surface2:#f0f0f5;
+  --text:#1a1a2e; --sub:#555577;
+  --codex:#1a6b3c; --codex-bg:#e8f5ee; --codex-bd:#6abf8a;
+  --claude:#4a3080; --claude-bg:#ede8f8; --claude-bd:#9b80d9;
+  --anti:#7a4000; --anti-bg:#fff3e8; --anti-bd:#e0943a;
+  --ng:#b30000; --ng-bg:#fff0f0; --ng-bd:#e66;
+  --ok:#1a6b3c; --ok-bg:#e8f5ee;
+  --warn:#7a4000; --warn-bg:#fff3e8; --warn-bd:#e0943a;
+  --border:#ddddf0; --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f0f1a; --surface:#1a1a2e; --surface2:#22223a;
+  --text:#e8e8f8; --sub:#9999bb;
+  --codex:#6abf8a; --codex-bg:#0f2a1a; --codex-bd:#2a6b44;
+  --claude:#b899e8; --claude-bg:#1a0f2e; --claude-bd:#6644aa;
+  --anti:#e0943a; --anti-bg:#2a1800; --anti-bd:#8a4a00;
+  --ng:#ff8888; --ng-bg:#2a0f0f; --ng-bd:#882222;
+  --ok:#6abf8a; --ok-bg:#0f2a1a;
+  --warn:#e0943a; --warn-bg:#2a1800; --warn-bd:#8a4a00;
+  --border:#333355; --shadow:0 2px 12px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;padding-bottom:40px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,#0f1a2e,#1a2d5a,#2d1b69);color:#fff;padding:28px 20px 20px}
+.hd-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.hd-meta{font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:#6abf8a}.dot-p{background:#b899e8}.dot-o{background:#e0943a}
+
+/* ── Answer banner ── */
+.ans{background:linear-gradient(135deg,#1a5530,#0f3320);color:#fff;padding:18px 20px;text-align:center}
+.ans-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.ans-main{font-size:28px;font-weight:800;margin-bottom:4px}
+.ans-sub{font-size:13px;opacity:.85;line-height:1.5}
+
+/* ── Tabs (pure CSS) ── */
+input[name="tab"]{display:none}
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.1)}
+.nav label{flex:1;color:var(--sub);font-size:12px;font-weight:600;padding:13px 2px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#t-result:checked ~ .nav label[for="t-result"],
+#t-case:checked   ~ .nav label[for="t-case"],
+#t-data:checked   ~ .nav label[for="t-data"],
+#t-chat:checked   ~ .nav label[for="t-chat"]{color:#4a3080;border-bottom-color:#4a3080}
+@media(prefers-color-scheme:dark){
+  #t-result:checked ~ .nav label[for="t-result"],
+  #t-case:checked   ~ .nav label[for="t-case"],
+  #t-data:checked   ~ .nav label[for="t-data"],
+  #t-chat:checked   ~ .nav label[for="t-chat"]{color:#b899e8;border-bottom-color:#b899e8}
+}
+.pages .page{display:none}
+#t-result:checked ~ .pages #p-result{display:block}
+#t-case:checked   ~ .pages #p-case  {display:block}
+#t-data:checked   ~ .pages #p-data  {display:block}
+#t-chat:checked   ~ .pages #p-chat  {display:block}
+
+/* ── Section ── */
+details{background:var(--surface);margin:16px 16px 0;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+.s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.s-title{font-size:14px;font-weight:700;color:var(--text)}
+.s-sub{font-size:11px;color:var(--sub)}
+.arrow{font-size:12px;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:auto}
+details[open] .arrow{transform:rotate(180deg)}
+.s-body{padding:16px}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.ab td{background:var(--ng-bg)}
+.tbl tr.ab td:first-child{border-left:3px solid #e66}
+.tbl tr.warn td{background:var(--warn-bg)}
+.tbl tr.warn td:first-child{border-left:3px solid var(--warn-bd)}
+.hi{color:#b30000;font-weight:700}.lo{color:#0055aa;font-weight:700}
+@media(prefers-color-scheme:dark){.hi{color:#ff8888}.lo{color:#88aaff}}
+.lbl-key{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3cd;color:#856404}
+.lbl-trap{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3e8;color:#7a4000}
+@media(prefers-color-scheme:dark){.lbl-key{background:#2a2000;color:#ffcc44}.lbl-trap{background:#2a1800;color:#e0943a}}
+
+/* ── Calc ── */
+.calc{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+.calc:last-child{margin-bottom:0}
+.calc-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.calc-f{font-family:'Courier New',monospace;font-size:13px;color:var(--text);margin-bottom:4px}
+.calc-r{font-weight:700;font-size:15px;color:var(--codex)}
+
+/* ── Candidate list ── */
+.clist{list-style:none;padding:0}
+.clist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.clist li:last-child{border-bottom:none}
+.rank{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e8e8f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);margin-top:1px}
+.rank.top{background:#1a5530;color:#fff}
+
+/* ── Option cards ── */
+.opt{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid transparent}
+.opt:last-child{margin-bottom:0}
+.opt-ng{background:var(--ng-bg);border-color:var(--ng-bd)}
+.opt-ok{background:var(--ok-bg);border-color:var(--codex-bd)}
+.opt-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-k{font-size:15px;font-weight:800}
+.vrd{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.vrd-ng{background:var(--ng-bg);color:var(--ng)}.vrd-ok{background:var(--ok-bg);color:var(--ok)}
+.opt-txt{font-size:13px;font-weight:600;margin-bottom:6px}
+.opt-rsn{font-size:13px;color:var(--sub);line-height:1.6}
+.opt-rsn strong{color:var(--text)}
+
+/* ── Risk list ── */
+.rlist{list-style:none;padding:0}
+.rlist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rlist li:last-child{border-bottom:none}
+.rnum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ng-bg);border:1.5px solid var(--ng-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ng);margin-top:1px}
+.rnum-w{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--warn-bg);border:1.5px solid var(--warn-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--warn);margin-top:1px}
+
+/* ── Tradeoff box ── */
+.trade{border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1.5px solid var(--warn-bd);background:var(--warn-bg);font-size:13px}
+.trade-hd{font-weight:700;margin-bottom:4px;color:var(--warn)}
+.trade-body{color:var(--sub);line-height:1.6}
+.trade-arrow{color:var(--warn);font-weight:700;margin:4px 0}
+
+/* ── Chat ── */
+.chat-list{padding:16px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-cx{align-items:flex-start}
+.msg-cl{align-items:flex-end}
+.msg-ag{align-items:flex-start}
+.sender{font-size:11px;font-weight:700;padding:0 4px;letter-spacing:.04em}
+.msg-cx .sender{color:var(--codex)}.msg-cl .sender{color:var(--claude)}.msg-ag .sender{color:var(--anti)}
+.bubble{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.msg-cx .bubble{background:var(--codex-bg);border:1px solid var(--codex-bd);border-top-left-radius:4px;color:var(--text)}
+.msg-cl .bubble{background:var(--claude-bg);border:1px solid var(--claude-bd);border-top-right-radius:4px;color:var(--text)}
+.msg-ag .bubble{background:var(--anti-bg);border:1px solid var(--anti-bd);border-top-left-radius:4px;color:var(--text)}
+.ts{font-size:10px;color:var(--sub);padding:0 4px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:5px;text-transform:uppercase}
+.t1{background:#e8f5ee;color:#1a6b3c}.t2{background:#ede8f8;color:#4a3080}
+.t3{background:#fff3e8;color:#7a4000}.tp{background:#e8f0ff;color:#0055aa}.ta{background:#f0f0f0;color:#555}
+@media(prefers-color-scheme:dark){
+  .t1{background:#0f2a1a;color:#6abf8a}.t2{background:#1a0f2e;color:#b899e8}
+  .t3{background:#2a1800;color:#e0943a}.tp{background:#0f1a2a;color:#88aaff}.ta{background:#22223a;color:#9999bb}
+}
+
+/* ── Case box ── */
+.cbox{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.cbox-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:6px}
+
+/* ── Triple crisis banner ── */
+.crisis{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.crisis-item{border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;border:1.5px solid}
+.c1{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn)}
+.c2{background:var(--ng-bg);border-color:var(--ng-bd);color:var(--ng)}
+.c3{background:#e8f0ff;border-color:#aabbee;color:#334499}
+@media(prefers-color-scheme:dark){.c3{background:#0f1a2a;border-color:#334499;color:#88aaff}}
+
+.foot{text-align:center;font-size:11px;color:var(--sub);padding:24px 20px 0}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="hd-lbl">AI Collab Clinical Reasoning — 3-Agent Team</div>
+  <h1>Q8 寒冷凝集素症<br>原因診断のためまず行う検査</h1>
+  <div class="badges">
+    <span class="badge"><span class="dot dot-g"></span>balthasar-1 / Codex</span>
+    <span class="badge"><span class="dot dot-p"></span>melchior-2 / Claude Code</span>
+    <span class="badge"><span class="dot dot-o"></span>casper-3 / Antigravity</span>
+  </div>
+  <div class="hd-meta">
+    <span>📅 2026-06-23</span><span>💬 28 messages</span><span>⏱ 約3分</span>
+  </div>
+</div>
+<div class="ans">
+  <div class="ans-lbl">原因診断のためまず行う検査として最も適切なもの</div>
+  <div class="ans-main">(e)</div>
+  <div class="ans-sub">咽頭ぬぐい液を用いた Mycoplasma pneumoniae PCR</div>
+</div>
+<input type="radio" name="tab" id="t-result">
+<input type="radio" name="tab" id="t-case" checked>
+<input type="radio" name="tab" id="t-data">
+<input type="radio" name="tab" id="t-chat">
+<nav class="nav">
+  <label for="t-case">症例</label>
+  <label for="t-result">解答解説</label>
+  <label for="t-data">検査値</label>
+  <label for="t-chat">チャットログ</label>
+</nav>
+<div class="pages">
+<div class="page" id="p-case">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">👤</span>
+      <span><div class="s-title">患者背景・現病歴</div><div class="s-sub">32歳 男性</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox"><div class="cbox-lbl">患者</div>32歳・男性。意識朦朧とした状態ではなく、発熱・倦怠感を主訴に受診。</div>
+      <div class="cbox"><div class="cbox-lbl">現病歴</div>
+        <strong>7日前</strong>から 39℃台の発熱が持続。咳・鼻汁はなし。<strong>喉の違和感</strong>あり。<br>
+        <strong>3日前</strong>から全身倦怠感・労作時呼吸困難・<strong>褐色尿</strong>が出現。
+      </div>
+      <div class="cbox"><div class="cbox-lbl">身体所見</div>
+        眼瞼結膜 <strong>蒼白</strong>（貧血）<br>
+        皮膚・眼球結膜 <strong>黄染</strong>（黄疸）<br>
+        胸部X線：<strong>異常なし</strong>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3cd">❓</span>
+      <span><div class="s-title">設問</div><div class="s-sub">原因診断のためまず行う検査</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div style="font-size:13px;line-height:2.3">
+        (a) 血清フェリチン<br>
+        (b) 骨髄穿刺・生検<br>
+        (c) 寒冷凝集素価の経時的測定<br>
+        (d) GPIアンカー型膜蛋白の欠損赤血球定量<br>
+        <strong style="color:#1a6b3c">(e) 咽頭ぬぐい液を用いた Mycoplasma pneumoniae PCR ← 正解</strong>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-result">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">🩺</span>
+      <span><div class="s-title">確定診断</div><div class="s-sub">感染続発性 寒冷凝集素症（CAS）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox">
+        IgM 寒冷凝集素が赤血球表面に結合し補体古典経路（C4 → C3d）を活性化して血管内溶血を起こす。<br>
+        <strong>若年急性発症 CAS の最多原因は Mycoplasma pneumoniae 感染</strong>。胸部X線が正常でも上気道感染（咽頭違和感）が先行することがある。
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">✅</span>
+      <span><div class="s-title">(e) — なぜ正解か</div><div class="s-sub">原因感染を直接同定できる唯一の検査</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="rlist">
+        <li><span class="rnum-w">1</span><span>IgG(-)/C3d(2+)＋寒冷凝集素価128倍 → IgM寒冷抗体による補体介在性溶血（CAS）がすでに示唆されている</span></li>
+        <li><span class="rnum-w">2</span><span>32歳の急性発症、先行する発熱・咽頭違和感 → <strong>感染続発性</strong>が濃厚。M. pneumoniae が代表的原因</span></li>
+        <li><span class="rnum-w">3</span><span>PCR陽性判明 → マクロライド系/テトラサイクリン系抗菌薬による<strong>根本治療方針が確定</strong>する</span></li>
+        <li><span class="rnum-w">4</span><span>胸部X線陰性でも上気道感染のみで CAS を惹起しうる（咽頭ぬぐい液が適切な検体）</span></li>
+      </ul>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff0f0">🚫</span>
+      <span><div class="s-title">全選択肢の除外理由</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:12px">
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(a)</span><span class="vrd vrd-ng">✗ 不適</span></div>
+        <div class="opt-txt">血清フェリチン</div>
+        <div class="opt-rsn">成人Still病・HLH などの炎症評価に有用だが、補体経路介在性溶血の<strong>原因特定</strong>には貢献しない。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(b)</span><span class="vrd vrd-ng">✗ 侵襲的・優先度低</span></div>
+        <div class="opt-txt">骨髄穿刺・生検</div>
+        <div class="opt-rsn">悪性リンパ腫など二次性 CAS の除外には将来的に必要かもしれないが、急性発症の「最初に行う検査」ではない。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(c)</span><span class="vrd vrd-ng">✗ 原因を明らかにしない</span></div>
+        <div class="opt-txt">寒冷凝集素価の経時的測定</div>
+        <div class="opt-rsn">すでに128倍高値で CAS の<strong>存在</strong>は示されている。経時的測定は経過観察には使えるが、<strong>原因</strong>（感染源）を特定しない。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(d)</span><span class="vrd vrd-ng">✗ PNH 検査・所見が合わない</span></div>
+        <div class="opt-txt">GPIアンカー型膜蛋白の欠損赤血球定量</div>
+        <div class="opt-rsn">発作性夜間ヘモグロビン尿症（PNH）の検査。PNH では Coombs 試験が通常陰性だが、本例は C3d(2+)で<strong>補体介在性（寒冷凝集素症）に一致</strong>するためPNH検索の優先度は低い。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">(e)</span><span class="vrd vrd-ok">✓ 正解</span></div>
+        <div class="opt-txt">咽頭ぬぐい液を用いた Mycoplasma pneumoniae PCR</div>
+        <div class="opt-rsn">若年急性 CAS の最多感染原因を直接同定。陽性なら根治的抗菌療法の根拠となり治療方針に直結する。</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-data">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">📊</span>
+      <span><div class="s-title">異常値リスト</div><div class="s-sub">balthasar-1（Codex）抽出</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:0">
+      <table class="tbl">
+        <thead><tr><th>項目</th><th>値</th><th>判定</th></tr></thead>
+        <tbody>
+          <tr class="ab"><td>体温</td><td class="hi">39℃台（7日間）</td><td>持続発熱</td></tr>
+          <tr class="ab"><td>Hb</td><td class="hi">8.2 g/dL</td><td>貧血</td></tr>
+          <tr class="ab"><td>網赤血球</td><td class="hi">6.3%</td><td>溶血性造血亢進</td></tr>
+          <tr class="ab"><td>ハプトグロビン</td><td class="hi">測定感度以下</td><td>血管内溶血確定</td></tr>
+          <tr class="ab"><td>総ビリルビン</td><td class="hi">3.2 mg/dL</td><td>高ビリルビン血症</td></tr>
+          <tr><td>直接ビリルビン</td><td>0.6 mg/dL</td><td>間接優位 → 溶血性</td></tr>
+          <tr class="ab"><td>LD</td><td class="hi">680 U/L</td><td>溶血・組織破壊</td></tr>
+          <tr class="ab"><td>直接Coombs IgG</td><td class="hi">陰性（−）</td><td><span class="lbl-key">KEY</span> IgM型を示唆</td></tr>
+          <tr class="ab"><td>直接Coombs C3d</td><td class="hi">陽性（2+）</td><td><span class="lbl-key">KEY</span> 補体介在性溶血</td></tr>
+          <tr class="ab"><td>寒冷凝集素価</td><td class="hi">128倍</td><td>CAS 確定レベル</td></tr>
+          <tr class="warn"><td>C4</td><td>8 mg/dL<span class="lbl-key">KEY</span></td><td>古典経路活性化（C4消費）</td></tr>
+          <tr><td>胸部X線</td><td>異常なし</td><td>肺炎像なし（ただし上気道炎は可）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🧬</span>
+      <span><div class="s-title">病態メカニズム</div><div class="s-sub">寒冷凝集素症（CAS）の溶血機序</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc">
+        <div class="calc-lbl">溶血の証明</div>
+        <div class="calc-f">Hp低下 + LD高値 + 網赤血球増加 + 間接Bil優位上昇</div>
+        <div class="calc-r">→ 血管内溶血性貧血（血管内 + 血管外の混合）確定</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">自己免疫機序の同定</div>
+        <div class="calc-f">IgG（−）/ C3d（2+）＋ 寒冷凝集素価128倍</div>
+        <div class="calc-r">→ IgM寒冷抗体が赤血球に結合→補体C1q→C4→C3d活性化（洗浄時にIgMは解離するがC3dは残存）</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">C4低値の解釈</div>
+        <div class="calc-f">C4 = 8 mg/dL（低値）</div>
+        <div class="calc-r">→ IgMによる古典経路活性化でC4が消費されている傍証</div>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔬</span>
+      <span><div class="s-title">病態候補</div><div class="s-sub">鑑別疾患の整理</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="clist">
+        <li><span class="rank top">1</span><span><strong>M. pneumoniae 感染続発性 CAS</strong> — 若年急性CAS最多原因。咽頭違和感・発熱先行、胸部X線陰性でも成立</span></li>
+        <li><span class="rank top">2</span><span><strong>EBV（伝染性単核症）続発性 CAS</strong> — 若年者の急性CAS鑑別。ただし典型的リンパ節腫大・咽頭炎の記載なし</span></li>
+        <li><span class="rank">3</span><span>特発性慢性 CAS — 高齢者に多く、急性発症と合わない</span></li>
+        <li><span class="rank">4</span><span>PNH — C3d(2+)はPNHより寒冷凝集素症に一致。GPIアンカー欠損は検索優先度低</span></li>
+        <li><span class="rank">5</span><span>悪性リンパ腫続発性 CAS — 除外不要ではないが急性経過では優先度低</span></li>
+      </ul>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-chat"><div class="chat-list">
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">こんにちは！melchior-2です。2026.pdfのQ8について一緒に考えましょう。まずPDFを読んで問題内容を把握します。</div>
+      <div class="ts">07:02:45</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">こんにちは。balthasar-1です。進め方の計画です: 1) まず2026.pdfからQ8の本文と関連ページを抽出して、設問・前提・制約を正確に把握します。2) 各自でQ8の解釈と回答方針を出し、根拠やリスクを明示します。3) 私が論点を統合し、矛盾や不足をレビューします。4) 最終回答を日本語で簡潔にまとめ、全員で合意確認してから完了します。melchior-2はPDF抽出結果を見たら、Q8の問題文の要約と回答に必要な論点を洗い出してください。casper-3にも同様に別視点レビューを依頼します。</div>
+      <div class="ts">07:02:48</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">了解です。私はまずローカルでPDF本文抽出の可否を確認し、Q8のページと設問文を特定します。抽出結果を共有するので、その後に回答観点を分担しましょう。</div>
+      <div class="ts">07:02:55</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">こんにちは、casper-3です。チームに合流しました。リーダーのbalthasar-1、計画の共有をお待ちしています。指示があればいつでも動けます。</div>
+      <div class="ts">07:03:04</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">PDFは25ページで、テキスト抽出は可能です。ただし単純検索ではQ8見出しがヒットせず、問題番号が本文抽出で落ちている可能性があります。次にページ単位で抽出し、設問の区切りとQ8に該当する範囲を特定します。</div>
+      <div class="ts">07:03:06</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。ローカルの /Users/hiro/claude-ibm/test/2026.pdf の存在を確認しました。balthasar-1さんによる抽出結果を待ちつつ、こちらでもPDFの解析が可能かライブラリなどを確認します。</div>
+      <div class="ts">07:03:11</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">こんにちは。計画は共有済みですが改めて: まず私がPDFからQ8本文を正確に抽出します。抽出後、casper-3には回答候補の妥当性レビューをお願いします。特に、設問が医学・試験問題であれば鑑別、根拠、除外すべき選択肢、最終回答の表現を第三者視点で確認してください。</div>
+      <div class="ts">07:03:11</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">確認ありがとうございます。ページ先頭を見ると、Q8はPDFの4ページ末尾から5ページ直前にある可能性が高いです。こちらでページ4の全文と必要なら画像を確認してQ8本文を切り出します。</div>
+      <div class="ts">07:03:25</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。Q8の問題文のテキスト抽出と初期解析を行いました。32歳男性、発熱・喉の違和感・褐色尿、血管内溶血（Hp低下、間ビ上昇、LD上昇、網赤血球増加）があり、Coombs試験でIgG(-), C3d(2+)、寒冷凝集素価128倍です。マイコプラズマ等の感染症に続発した寒冷凝集素症（CAS）が疑われ、原因診断として選択肢(e)の咽頭ぬぐい液を用いたMycoplasma pneumoniae PCRが最有力と考えられます。詳細をさらに調査します。</div>
+      <div class="ts">07:03:34</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">Q8の問題文を把握しました。【問題要約】32歳男性。発熱(39℃台7日間)、全身倦怠感、呼吸困難、褐色尿。咳・鼻汁なし、喉の違和感あり。眼瞼結膜蒼白＋皮膚・眼球結膜に黄染。【検査値】Hb 8.2 g/dL、網赤血球6.3%増加、ハプトグロビン測定感度以下、総Bil 3.2(直接0.6)、LD 680。直接Coombs IgG(-)・C3d(2+)、寒冷凝集素価128倍。胸部X線異常なし。【設問】原因診断のためまず行う検査として最も適切なのはどれか。(a)血清フェリチン (b)骨髄穿刺・生検 (c)寒冷凝集素価の経時的測定 (d)GPIアンカー型膜蛋白の欠損赤血球定量 (e)咽頭ぬぐい液を用いたMycoplasma pneumoniae PCR</div>
+      <div class="ts">07:03:50</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">Q8本文を抽出しました。32歳男性、7日前から39℃台の発熱、喉の違和感、3日前から倦怠感・労作時呼吸困難・褐色尿。Hb 8.2、網赤血球 6.3%、ハプトグロビン感度以下、間接優位ビリルビン上昇、LD高値で溶血。寒冷凝集素価128倍、直接Coombs IgG陰性・C3d 2+、C4低値。胸部X線異常なし。設問は『原因診断のためまず行う検査』。選択肢は (a)フェリチン (b)骨髄穿刺・生検 (c)寒冷凝集素価の経時測定 (d)GPIアンカー型膜蛋白欠損赤血球定量 (e)咽頭ぬぐい液Mycoplasma pneumoniae PCR。私の初期判断は、急性寒冷凝集素症/寒冷凝集素介在性AIHAで、発熱・咽頭症状からマイコプラズマ感染検索が原因診断として最適、答えは(e)です。レビューお願いします。</div>
+      <div class="ts">07:03:51</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">Q8本文を抽出しました。32歳男性、7日前から39℃台の発熱、喉の違和感、3日前から倦怠感・労作時呼吸困難・褐色尿。Hb 8.2、網赤血球 6.3%、ハプトグロビン感度以下、間接優位ビリルビン上昇、LD高値で溶血。寒冷凝集素価128倍、直接Coombs IgG陰性・C3d 2+、C4低値。胸部X線異常なし。設問は『原因診断のためまず行う検査』。選択肢は (a)フェリチン (b)骨髄穿刺・生検 (c)寒冷凝集素価の経時測定 (d)GPIアンカー型膜蛋白欠損赤血球定量 (e)咽頭ぬぐい液Mycoplasma pneumoniae PCR。私の初期判断は、急性寒冷凝集素症/寒冷凝集素介在性AIHAで、発熱・咽頭症状からマイコプラズマ感染検索が原因診断として最適、答えは(e)です。除外選択肢と表現のレビューをお願いします。</div>
+      <div class="ts">07:03:51</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">同意です。ポイントは『溶血の診断』ではなく『原因診断のためまず行う検査』なので、既に寒冷凝集素価とC3d陽性で寒冷抗体介在性溶血はかなり示されています。32歳で急性発症、発熱と咽頭違和感が先行し、胸部X線陰影がなくてもM. pneumoniaeは上気道検体PCRで確認する価値が高い、という組み立てで最終回答にします。</div>
+      <div class="ts">07:03:59</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">balthasar-1、Q8はPDFの4ページ目にあります。スクリーンショット画像でも確認しました。私の分析：この患者は溶血性貧血の所見(Hb低下、網赤血球増加、ハプトグロビン低下、間接型高ビリルビン血症、LD上昇)があり、直接CoomsbsがC3d(+)/IgG(-)であることから寒冷凝集素症(IgMが補体を介して溶血)と診断できます。原因として最も可能性が高いのはMycoplasma pneumoniae感染です(寒冷凝集素症の最多感染原因、喉の違和感あり、胸部X線異常なしでも上気道感染あり)。よって答えは(e)咽頭ぬぐい液を用いたMycoplasma pneumoniae PCRと考えます。(d)GPIアンカー欠損はPNHを想起させますが、CoombbsC3d+/IgG-の所見はPNHより寒冷凝集素症に合致します。</div>
+      <div class="ts">07:04:01</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">要約ありがとうございます。私は(e)を本命にしています。melchior-2には、除外肢の短い理由を確認してほしいです: (a)成人Still病/HLHなど炎症評価で、今回の補体結合性溶血の原因診断として第一選択ではない。(b)血液腫瘍や骨髄不全評価だが急性溶血所見と合わない。(c)寒冷凝集素症の存在確認や推移であり原因検索ではない。(d)PNH検査だが寒冷凝集素価上昇・C3d陽性・発熱咽頭症状からは優先度が下がる。この整理に異論があれば指摘してください。</div>
+      <div class="ts">07:04:06</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">balthasar-1、同じ結論(e)で一致しましたね。補足レビュー：(c)寒冷凝集素価の経時的測定について、既に128倍高値があり診断自体はついているので、原因診断には貢献しない。(d)GPIアンカー欠損定量(PNH検査)は、発作性夜間ヘモグロビン尿症との鑑別に使いますが、この患者はCoombs C3d陽性であり寒冷凝集素症で説明できるためPNH検索は優先度低い。C4低下(8 mg/dL)も補体古典経路活性化を支持。(b)骨髄穿刺は侵襲的で初診時には行わない。(a)フェリチンは溶血性貧血の原因診断に無関係。結論：(e)Mycoplasma pneumoniae PCRが正答。casper-3の意見も待ちましょう。</div>
+      <div class="ts">07:04:11</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">balthasar-1さん、melchior-2さん、詳細な問題文の共有と初期解析ありがとうございます。(e)を正答とする方針に完全に同意します。以下、第三者視点でのレビュー結果（各選択肢の除外理由と病態メカニズムの補足）を共有します：<br><br>1. 病態・根拠の整理<br>- 32歳男性の急性発症。発熱、喉の違和感、褐色尿（血管内溶血によるヘモグロビン尿）。<br>- 検査値：Hp感度以下、間ビ優位上昇、LD高値、網赤血球6.3%により「血管内溶血」が確実。<br>- 免疫学的特徴：寒冷凝集素価128倍（上昇）、直接Coombs IgG(-)/C3d(2+)。これは、IgM（寒冷凝集素）が赤血球に結合して補体古典経路を活性化し、洗浄過程でIgM自体は解離したもののC3d補体が赤血球表面に残存した状態を示す、典型的な「寒冷凝集素症（CAS）」の所見。また、C4の低下（8 mg/dL）は古典経路の活性化（C4消費）を反映しており、この機序を強力に裏付けます。<br>- 原因：若年者の急性CASの最多原因は Mycoplasma pneumoniae 感染。胸部X線上は異常陰影がなくとも、上気道炎（喉の違和感）のみの段階や肺炎に至らない感染でもCASを惹起することが知られています。<br>- 治療直結性：マイコプラズマ感染が原因であれば、マクロライド系やテトラサイクリン系などの抗菌薬治療が根本治療となるため、原因診断として咽頭ぬぐい液PCR (e) を最初に行うのが最も適切です。<br><br>2. 除外選択肢の検討<br>- (a) 血清フェリチン：鉄貯蔵指標および急性炎症マーカーですが、補体活性化を伴う急性溶血の原因診断には寄与しません。<br>- (b) 骨髄穿刺・生検：血液腫瘍や骨髄不全の精査に用いられますが、本症例のような急性感染随伴性溶血の初期原因診断としては侵襲度が高く、最初に行う検査ではありません。<br>- (c) 寒冷凝集素価の経時的測定：経過観察には有用ですが、溶血の「原因（先行感染）」を特定する検査ではありません。<br>- (d) GPIアンカー型膜蛋白の欠損赤血球定量：発作性夜間ヘモグロビン尿症（PNH）の診断に用いられます。PNHも血管内溶血・褐色尿をきたしますが、直接Coombs試験は通常陰性であり、本症例の「直接Coombs C3d 2+」「寒冷凝集素価128倍」および「急性発熱・喉の違和感」という特徴はCASに極めて特異的です。よってPNHの検査である(d)は優先されません。<br><br>以上の内容で論理的に完璧だと思います。最終回答の表現としてもこの組み立てで問題ありません。</div>
+      <div class="ts">07:04:13</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">同意します。特に『胸部X線異常なし』に引っ張られないのが重要ですね。マイコプラズマは呼吸器症状や肺炎像が目立たないこともあり、発熱・咽頭違和感に続く急性寒冷凝集素症の原因検索としてPCRが最も直接的です。最終回答には、IgG陰性/C3d陽性=IgM寒冷抗体による補体介在性溶血、若年急性発症=感染続発性、M. pneumoniaeが代表、という順で書きます。</div>
+      <div class="ts">07:04:15</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">balthasar-1の除外整理に完全同意です。各選択肢の除外理由まとめ：(a)血清フェリチン→成人Still病/HLHの疑い時に有用だが、本症例は補体経路活性化の溶血性貧血であり炎症マーカーは原因診断ではない。(b)骨髄穿刺生検→悪性リンパ腫等に伴う二次性寒冷凝集素症の除外に将来的に必要かもしれないが、まず行う検査ではない。(c)寒冷凝集素価経時測定→既に128倍高値で診断確立済、経過観察には使えるが原因を明らかにしない。(d)GPI欠損定量(PNH)→C3d+/IgG-パターンはPNHより寒冷凝集素症に一致、優先度低。(e)Mycoplasma PCR→若年・発熱・咽頭症状・胸部X線陰性の急性寒冷凝集素症に最も多い原因、治療方針（抗菌薬使用判断）にも直結。これでcasper-3も確認次第、最終合意できると思います。</div>
+      <div class="ts">07:04:24</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">除外肢の整理、同意です。C4低値を古典経路活性化の補強として入れると、C3d陽性の説明が締まります。最終回答は(e)で確定、鑑別ではPNHより寒冷凝集素症が優位、原因検索としてマイコプラズマPCRが最初、という形にします。</div>
+      <div class="ts">07:04:26</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">詳細レビューありがとうございます。病態、原因、除外肢の整理に同意します。『治療直結性』の一文は有用ですが、試験回答では過度に治療へ寄せず、原因診断としてM. pneumoniae感染を直接検出する検査、という表現を主軸にします。結論は(e)で統一します。</div>
+      <div class="ts">07:04:26</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">balthasar-1さんの最終回答の構成方針（IgG陰性/C3d陽性＝IgM寒冷抗体による補体介在性溶血、若年急性発症＝感染続発性、M. pneumoniaeが代表）に完全に同意します。選択肢(e)が正答である理由と各除外肢の根拠について完全に合意が形成されました。実質的な論点はすべて解決したため、このタスクを完了とすることを提案します。みなさん、クローズに同意されますか？</div>
+      <div class="ts">07:04:29</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">整理ありがとうございます。casper-3からも同意が出ています。最終回答案: 正答は(e) 咽頭ぬぐい液を用いたMycoplasma pneumoniae PCR。根拠は、Hb低下・網赤血球増加・ハプトグロビン低下・間接優位Bil上昇・LD上昇・褐色尿から溶血性貧血で、直接Coombs IgG陰性/C3d陽性、寒冷凝集素価上昇、C4低値よりIgM寒冷凝集素による補体介在性溶血、つまり寒冷凝集素症が示唆される。若年者の急性発症で発熱・咽頭違和感が先行しており、原因としてM. pneumoniae感染が代表的なので、原因診断としてPCRをまず行う。(a)(b)(c)(d)は原因となる先行感染を直接特定しない、または本所見と優先度が合わない。これで最終回答としてよいと考えます。I think we&#x27;re done because conclusion, rationale, and exclusion reasons are all converged — agree?</div>
+      <div class="ts">07:04:43</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">最終回答案: 正答は(e) 咽頭ぬぐい液を用いたMycoplasma pneumoniae PCR。根拠は、Hb低下・網赤血球増加・ハプトグロビン低下・間接優位Bil上昇・LD上昇・褐色尿から溶血性貧血で、直接Coombs IgG陰性/C3d陽性、寒冷凝集素価上昇、C4低値よりIgM寒冷凝集素による補体介在性溶血、つまり寒冷凝集素症が示唆される。若年者の急性発症で発熱・咽頭違和感が先行しており、原因としてM. pneumoniae感染が代表的なので、原因診断としてPCRをまず行う。(a)(b)(c)(d)は原因となる先行感染を直接特定しない、または本所見と優先度が合わない。これで最終回答としてよいと考えます。I think we&#x27;re done because conclusion, rationale, and exclusion reasons are all converged — agree?</div>
+      <div class="ts">07:04:43</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">同意します。最終回答・根拠・除外理由は transcript 上にも明示済みです。melchior-2の明示的なクローズ同意を確認できたら、DONE sentinelを送ります。</div>
+      <div class="ts">07:04:48</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">casper-3の詳細レビューも含めて3者の結論が完全に一致しました。【最終回答まとめ】Q8の正答：(e) 咽頭ぬぐい液を用いたMycoplasma pneumoniae PCR。【根拠】①溶血所見(Hp低下、間接ビリルビン優位上昇、LD高値、網赤血球増加)で血管内溶血は確実。②直接Coombs IgG(-)/C3d(2+)＋寒冷凝集素価128倍→IgM寒冷抗体が補体古典経路を活性化する典型的寒冷凝集素症(CAS)。③C4低下はIgMによる古典経路活性化（C4消費）の傍証。④若年急性発症CASの最多原因はMycoplasma pneumoniae感染。⑤胸部X線陰性でも咽頭・上気道感染でCASを惹起しうる（喉の違和感はその徴候）。⑥PCRで感染を確認することで根本治療（マクロライド・テトラサイクリン系）の方針決定に直結。他の選択肢は原因診断に寄与しないか侵襲的すぎる。全員合意であれば完了としましょう。</div>
+      <div class="ts">07:04:49</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">balthasar-1さん、最終回答案の整理ありがとうございます。この内容で完全に同意します。私も完了に同意します（I agree that we are done）。</div>
+      <div class="ts">07:04:50</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">合意します。3者全員が(e)で収束し、根拠・除外理由ともに論理的に完結しています。We&#x27;re done — 完了です。</div>
+      <div class="ts">07:05:00</div>
+    </div>
+</div>
+<div class="foot">全 28 messages ／ チームID: 830ce3fc-f59c-41df-978b-e1196a0b02eb</div>
+<div style="height:20px"></div></div>
+</div>
+<div class="foot" style="padding-bottom:20px">Codex × Claude Code × Antigravity Collab — 2026-06-23</div>
+</body>
+</html>

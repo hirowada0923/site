@@ -129,6 +129,7 @@
   .pill{display:inline-block;font-size:10px;font-weight:700;border-radius:20px;padding:2px 9px}
   .p-strong{background:rgba(86,214,200,.16);color:var(--cyan);border:1px solid rgba(86,214,200,.4)}
   .p-mid{background:rgba(242,177,75,.14);color:var(--amber);border:1px solid rgba(242,177,75,.4)}
+  .p-ext{background:rgba(169,139,255,.16);color:var(--violet);border:1px solid rgba(169,139,255,.45)}
 
   /* lifecycle flow */
   .flow{display:flex;flex-direction:column;gap:7px;margin:4px 0 14px}
@@ -250,7 +251,7 @@
     <div class="rail"><div class="no">01 — SUMMARY</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 01</div>
-      <h2>まず押さえる9つのポイント</h2>
+      <h2>まず押さえる10のポイント</h2>
       <div class="rule"></div>
       <p class="lede">この9ヶ月で何が起きたか。一言でいうと「AIにできることは増えた。でも責任の置き場所は動いていない」。</p>
       <div class="scroll">
@@ -264,6 +265,7 @@
           <li><b>開発が速くなり、見積りの基準も変わる</b><span class="d">試して直すサイクルが短くなった。見積りは「書く量」でなく「人が確かめる時間」で考える。<span class="tag t-inf">支持/推論</span></span></li>
           <li><b>新しい失敗の形が出てきた</b><span class="d">最初の勘違いに気づかないまま、筋は通っているのに的外れなものを丸ごと作ってしまう（=もっともらしい間違い）。<span class="tag t-sup">支持</span></span></li>
           <li><b>「テスト・型・CI」という土台がないと危ない</b><span class="d">AIの自己チェックは、この土台があって初めて効く。テストが通るのは必要条件で、品質の保証ではない。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>MCPと並ぶ土台「Agent Skills」</b><span class="d">MCPがAIを社内ツールに「つなぐ」のに対し、Skillsは手順や規約を <code>SKILL.md</code> にして「教える」仕組み。出力が安定する。2冊ではほぼ触れられていないが重要。<span class="tag t-ext">外部</span></span></li>
         </ol>
       </div>
       <div class="punch"><span class="mk">この章の結論</span>AIは賢くなった。それでも、最後に確かめて決めるのは人間。</div>
@@ -368,6 +370,14 @@
               <li>本番のパスワードや鍵を、AIに<b>絶対に渡さない</b></li>
               <li>AIの権限は最小限に。書き込み・実行をするAIは隔離する</li>
               <li>評価は「書いた量」でなく<b>価値が届くまでの速さ・不具合の漏れ</b>で</li>
+            </ul>
+          </div>
+          <div class="grp">
+            <h3><span class="chip">土台</span>つなぐMCP＋教えるSkills</h3>
+            <ul class="b">
+              <li><b>MCP</b>＝AIを社内のツールやデータに「つなぐ」共通規格</li>
+              <li><b>Agent Skills</b>＝手順や規約を <code>SKILL.md</code> にして「教える」仕組み。出力が安定・再現しやすくなる</li>
+              <li>第三者製スキルは<b>素性を確認</b>してから使う（持ち込みリスク）</li>
             </ul>
           </div>
         </div>

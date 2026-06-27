@@ -185,6 +185,13 @@
   .duo{display:grid;grid-template-columns:1fr 1fr;gap:24px;min-height:0;flex:1}
   .duo .scroll{flex:none;height:100%}
 
+  /* konifar-style punchline: one plain-spoken conclusion, pinned at the bottom */
+  .punch{margin-top:14px;padding:13px 18px;border-radius:10px;
+    background:linear-gradient(90deg, rgba(242,177,75,.14), rgba(86,214,200,.10));
+    border:1px solid var(--line);border-left:4px solid var(--amber);
+    font-size:clamp(14px,1.35vw,18px);font-weight:800;line-height:1.5;color:#fff}
+  .punch .mk{font-family:ui-monospace,monospace;font-size:11px;color:var(--amber);letter-spacing:.1em;display:block;margin-bottom:3px;font-weight:600}
+
   /* ----- chrome: nav ----- */
   .hud{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;gap:14px;align-items:center;z-index:50}
   .dots{display:flex;gap:8px}
@@ -223,17 +230,17 @@
   <section class="slide cover active">
     <div class="body">
       <div class="kicker">Synthesis Report · 2025 → 2026</div>
-      <h1>生成AIとAIエージェントによる<br>プロダクトエンジニアリングの変遷</h1>
-      <p class="sub">確率的に振る舞うエージェントを、決定論的なハーネス（テスト・型・CI/CD・サンドボックス）の内側でいかに使いこなすか。2冊の一次情報と二次分析を統合した、IT部門マネジメント向けの最終レポート。</p>
+      <h1>AIとAIエージェントで<br>プロダクト開発はどう変わったか</h1>
+      <p class="sub">AIは賢くなった。でも「最後に責任をとるのは人間」は変わっていない。2冊の本と分析を読み解き、何が変わって何が変わらないかを、IT部門の意思決定者向けに整理しました。</p>
       <div class="meta">
-        <div><div class="l">PRIMARY SOURCES</div><div class="v">Beyond Vibe Coding ／ Product Engineering with AI</div></div>
-        <div><div class="l">SCOPE</div><div class="v">2025年前半 → 2026年6月</div></div>
-        <div><div class="l">SLIDES</div><div class="v">表紙＋9セクション＝全10枚</div></div>
+        <div><div class="l">読んだ本</div><div class="v">Beyond Vibe Coding ／ Product Engineering with AI</div></div>
+        <div><div class="l">対象の期間</div><div class="v">2025年前半 → 2026年6月</div></div>
+        <div><div class="l">枚数</div><div class="v">表紙＋9テーマ＝全10枚</div></div>
       </div>
       <div class="legend">
-        <span><i style="background:var(--cyan)"></i>[支持] 書籍に明示的根拠</span>
-        <span><i style="background:var(--amber)"></i>[推論] 妥当な工学的推論</span>
-        <span><i style="background:var(--violet)"></i>[外部] 評者の専門知見</span>
+        <span><i style="background:var(--cyan)"></i>[支持] 本に書かれている</span>
+        <span><i style="background:var(--amber)"></i>[推論] 本から論理的に導ける</span>
+        <span><i style="background:var(--violet)"></i>[外部] 評者が補う見解</span>
       </div>
     </div>
   </section>
@@ -243,22 +250,23 @@
     <div class="rail"><div class="no">01 — SUMMARY</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 01</div>
-      <h2>エグゼクティブサマリー</h2>
+      <h2>まず押さえる9つのポイント</h2>
       <div class="rule"></div>
-      <p class="lede">経営層が最初に押さえるべき9点。「能力は伸びたが、説明責任の所在は動いていない」が通底するテーマ。</p>
+      <p class="lede">この9ヶ月で何が起きたか。一言でいうと「AIにできることは増えた。でも責任の置き場所は動いていない」。</p>
       <div class="scroll">
         <ol class="exec">
-          <li><b>提案から行動へ</b><span class="d">インライン補完から、計画・実行・検証を自律で回すエージェントへ。「情報から行動へ」の転換。<span class="tag t-sup">支持</span></span></li>
-          <li><b>MCPの前景化と成熟度ギャップ</b><span class="d">外部ツール接続標準として注目。ただし採用は断片的で権限管理は手動。「普遍的標準」評価は慎重に。<span class="tag t-inf">支持/推論</span></span></li>
-          <li><b>70%問題の境界は不変</b><span class="d">偶有的複雑性はAI、本質的複雑性は人間。「90%対10%」は語り口の楽観化にすぎない。<span class="tag t-inf">支持/推論</span></span></li>
-          <li><b>PM＝文脈のキュレーター</b><span class="d">仕様の翻訳者から、意図を設計し文脈を精選してエージェントへ与える役割へ。<span class="tag t-sup">支持</span></span></li>
-          <li><b>「仕様＝プロトタイプ」の成立範囲</b><span class="d">探索段階では同一化。本番化では両者の分離と工学的規律が必要。<span class="tag t-inf">支持/推論</span></span></li>
-          <li><b>ミドル層の価値の再定義</b><span class="d">定型実装者は縮小、設計・曖昧さ処理・レビューを担うオーケストレーターは価値増。<span class="tag t-inf">支持/推論</span></span></li>
-          <li><b>アジャイル運営の高速化</b><span class="d">検証サイクル短縮で「検査と適応」が重要に。見積りは記述量から検証時間へ。<span class="tag t-inf">支持/推論</span></span></li>
-          <li><b>新たな失敗様式</b><span class="d">誤解の上に内部一貫した実装を築く Coherent Incorrectness（一貫した不正確さ）。<span class="tag t-sup">支持</span></span></li>
-          <li><b>決定論的ハーネスの不可欠性</b><span class="d">自己修正はテスト・型・CI/CD の精度に依存。テスト合格は必要だが十分ではない。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>提案するAIから、動くAIへ</b><span class="d">コードを補完して「提案」するだけだったAIが、自分で計画して書いて、テストして直すところまで「実行」するようになった。<span class="tag t-sup">支持</span></span></li>
+          <li><b>外部ツールにつなぐ仕組み（MCP）が広がった</b><span class="d">AIをGitHubやSlack、DBにつなぐ共通規格が登場。ただし使えるサービスはバラバラで、権限管理もまだ手作業。「業界標準」と呼ぶのは早い。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>「簡単な7割はAI、難しい3割は人間」は変わらない</b><span class="d">定型作業はAIが速くこなす。でも設計・例外処理・セキュリティ・業務知識という難所は、今も人間の仕事。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>PMの仕事は「文脈を整える人」へ</b><span class="d">細かい仕様書を書く人から、目的とユーザーの声・過去の失敗をそろえてAIに渡す人へ。<span class="tag t-sup">支持</span></span></li>
+          <li><b>「仕様がそのまま試作品になる」場面が増えた</b><span class="d">アイデアを書けば数分で動くものができる。ただし本番に出すには、作り直しと品質チェックがいる。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>中堅エンジニアの価値の置き方が変わる</b><span class="d">定型コードを書くだけの人は減る。一方、設計しAIの出力をレビューできる人の価値はむしろ上がる。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>開発が速くなり、見積りの基準も変わる</b><span class="d">試して直すサイクルが短くなった。見積りは「書く量」でなく「人が確かめる時間」で考える。<span class="tag t-inf">支持/推論</span></span></li>
+          <li><b>新しい失敗の形が出てきた</b><span class="d">最初の勘違いに気づかないまま、筋は通っているのに的外れなものを丸ごと作ってしまう（=もっともらしい間違い）。<span class="tag t-sup">支持</span></span></li>
+          <li><b>「テスト・型・CI」という土台がないと危ない</b><span class="d">AIの自己チェックは、この土台があって初めて効く。テストが通るのは必要条件で、品質の保証ではない。<span class="tag t-inf">支持/推論</span></span></li>
         </ol>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>AIは賢くなった。それでも、最後に確かめて決めるのは人間。</div>
     </div>
   </section>
 
@@ -267,22 +275,23 @@
     <div class="rail"><div class="no">02 — MAP</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 02</div>
-      <h2>エビデンスに基づく変化マップ</h2>
+      <h2>この1年で何がどう変わったか</h2>
       <div class="rule"></div>
-      <p class="lede">書籍1（2025年前半）と書籍2（2025年後半〜2026年）の差分を、根拠強度と実務インパクトで対比。</p>
+      <p class="lede">前半の本（2025年前半）と後半の本（2025年後半〜2026年）を並べて、変化の大きさと現場への効きどころを見る。</p>
       <div class="scroll">
         <table>
-          <thead><tr><th>技術テーマ</th><th>2025年前半（書籍1）</th><th>2025後半〜2026（書籍2）</th><th>根拠</th><th>実務への影響</th></tr></thead>
+          <thead><tr><th>テーマ</th><th>前半（2025年前半）</th><th>後半（2025後半〜2026）</th><th>確かさ</th><th>現場への効きどころ</th></tr></thead>
           <tbody>
-            <tr><td><b>開発者の主業務</b></td><td>インライン補完・チャットで「コード作成の高速化」</td><td>計画審査と出力の「レビュー・編集・操舵」</td><td><span class="pill p-strong">強</span></td><td>記述を委譲し、設計と整合性検証に集中</td></tr>
-            <tr><td><b>ツール呼び出し／自律性</b></td><td><code>roll, not fix</code>・並列プロンプトの手動対話</td><td>フロー・エンジニアリング（連鎖の自動化）</td><td><span class="pill p-mid">中</span></td><td>連射をやめ「足場」設計に投資</td></tr>
-            <tr><td><b>接続アーキテクチャ</b></td><td>MCPはツール内機能として部分登場</td><td>MCPをN×M統合の標準として体系化</td><td><span class="pill p-mid">中</span></td><td>社内API/システムをMCPサーバ化</td></tr>
-            <tr><td><b>PMの成果物</b></td><td>軽量仕様・ミニPRDで制約付与</td><td>「Context Pack」（声・失敗・受入基準）</td><td><span class="pill p-strong">強</span></td><td>問題の境界定義に集中、解はプロトタイプで発見</td></tr>
-            <tr><td><b>仕様とプロトタイプ</b></td><td>MVPは荒削りな初稿（first draft）扱い</td><td>探索段階で「仕様＝プロトタイプ」化</td><td><span class="pill p-mid">中</span></td><td>検証後に振る舞いを固定し本番化</td></tr>
-            <tr><td><b>品質保証ゲート</b></td><td>記述後のPRレビュー・テスト・スキャン</td><td>「計画フェーズ承認」＋本番AIops</td><td><span class="pill p-strong">強</span></td><td>着手前に計画レビュー、異常時に自動ロールバック</td></tr>
+            <tr><td><b>開発者の主な仕事</b></td><td>補完やチャットで「速く書く」</td><td>計画を確認し、出力を「見て直し舵を取る」</td><td><span class="pill p-strong">強</span></td><td>書く作業は任せ、設計と「ズレてないかの確認」に時間を使う</td></tr>
+            <tr><td><b>AIへの頼み方</b></td><td>気に入らなければ作り直す、複数案を出させる（手作業）</td><td>頼み方・判断・ツール操作を一連の流れとして組む</td><td><span class="pill p-mid">中</span></td><td>指示を連打するより、AIが自分で直せる「土台（テスト等）」を整える</td></tr>
+            <tr><td><b>外部ツールへの接続</b></td><td>MCPは一部ツールの便利機能どまり</td><td>MCPが「つなぎ方の共通規格」として主役に</td><td><span class="pill p-mid">中</span></td><td>社内のシステムやAPIをAIから使える状態にする</td></tr>
+            <tr><td><b>PMがつくるもの</b></td><td>軽い仕様・ミニ仕様書で条件を与える</td><td>目的・失敗例・合格基準・ユーザーの声をまとめた資料</td><td><span class="pill p-strong">強</span></td><td>解き方はAIの試作で探し、PMは「解くべき問題」を定める</td></tr>
+            <tr><td><b>仕様と試作品</b></td><td>AIが作るのはあくまで「下書き」</td><td>探索の段階では「仕様＝試作品」に</td><td><span class="pill p-mid">中</span></td><td>試作で確かめ、動きが固まってから本番用に作り直す</td></tr>
+            <tr><td><b>品質チェックの関所</b></td><td>書いた後のレビュー・テスト・検査</td><td>「書く前の計画レビュー」＋本番での自動監視</td><td><span class="pill p-strong">強</span></td><td>着手前に計画を確認し、本番では異常時に自動で切り戻す</td></tr>
           </tbody>
         </table>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>変わったのは「AIの使い方」。人がやる確認と判断は、むしろ前に出てきた。</div>
     </div>
   </section>
 
@@ -291,35 +300,36 @@
     <div class="rail"><div class="no">03 — DELTA</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 03</div>
-      <h2>何が変わり、何が変わらず、何が不明確か</h2>
+      <h2>変わったこと・変わらないこと・まだわからないこと</h2>
       <div class="rule"></div>
       <div class="scroll">
         <div class="grp">
-          <h3><span class="chip change">CHANGED</span>強く支持される変化</h3>
+          <h3><span class="chip change">変わった</span>はっきり変わったこと</h3>
           <ul class="b">
-            <li><b>「情報から行動へ」のエージェント化</b>：計画→生成→テスト実行→修正の自律閉ループ。<span class="tag t-sup">支持</span></li>
-            <li><b>プロトタイピングの民主化</b>：v0 / Bolt.new / Lovable で実働フルスタックを数分〜数時間で。<span class="tag t-sup">支持</span></li>
-            <li><b>文脈エンジニアリングの登場</b>：難所が「プロンプト技」から「コンテキスト管理」へ。<span class="tag t-sup">支持</span></li>
+            <li><b>AIが「自分で動く」ようになった</b>：計画して、書いて、テストを走らせて、直す。ここまで一人で回す。<span class="tag t-sup">支持</span></li>
+            <li><b>誰でも試作できるようになった</b>：v0・Bolt・Lovable などで、動くアプリが数分〜数時間でできる。<span class="tag t-sup">支持</span></li>
+            <li><b>「文脈を渡す力」が肝になった</b>：プロンプトの技より、必要な情報（声・失敗例・既存コード）をどう集めて渡すか。<span class="tag t-sup">支持</span></li>
           </ul>
         </div>
         <div class="grp">
-          <h3><span class="chip keep">UNCHANGED</span>実質は変わっていないこと</h3>
+          <h3><span class="chip keep">変わらない</span>実は変わっていないこと</h3>
           <ul class="b">
-            <li><b>70%（90%）問題の境界</b>：本質的複雑性は依然ほぼ全面的に人間依存。<span class="tag t-inf">支持/推論</span></li>
-            <li><b>「テスト合格」の不完全性</b>：自己修正はテストへ収束するだけ。誤解を含めば <code>coherent incorrectness</code>。<span class="tag t-inf">支持/推論</span></li>
-            <li><b>責任の所在</b>：不具合・侵害・ライセンスの責任は全面的に人間と組織。<span class="tag t-inf">支持/推論</span></li>
+            <li><b>難しい部分は今も人間</b>：複雑な設計、セキュリティ、長く保守できる作り、業務知識はAIに任せきれない。<span class="tag t-inf">支持/推論</span></li>
+            <li><b>「テストが通った＝正しい」ではない</b>：AIはテストを通すように直すだけ。テスト自体が的外れなら、的外れなものができる。<span class="tag t-inf">支持/推論</span></li>
+            <li><b>責任は人間と組織にある</b>：不具合も情報漏れもライセンス違反も、最後に責めを負うのは人。<span class="tag t-inf">支持/推論</span></li>
           </ul>
         </div>
         <div class="grp">
-          <h3><span class="chip open">OPEN</span>誇張の余地がある主張</h3>
+          <h3><span class="chip open">未確定</span>言い過ぎかもしれないこと</h3>
           <ul class="b">
-            <li><b>ミドル層の「消滅」</b>：消滅ではなく価値基準の再定義段階。<span class="tag t-ext">支持/推論/外部</span></li>
-            <li><b>仕様とプロトタイプの完全同一化</b>：規制・ミッションクリティカルでは分離が不可欠。<span class="tag t-inf">支持/推論</span></li>
-            <li><b>MCP／A2Aの普遍的標準化</b>：実態は「有望な新興プロトコル」。<span class="tag t-sup">支持</span></li>
-            <li><b>コードの完全な使い捨て化</b>：著者自身が "speculative" と明記。<span class="tag t-sup">支持</span></li>
+            <li><b>「中堅エンジニアは要らなくなる」</b>：消えるのではなく、求められる力が変わる段階。<span class="tag t-ext">支持/推論/外部</span></li>
+            <li><b>「仕様＝試作品でいい」</b>：新規の探索ならOK。だが本番・規制業務では仕様と品質チェックの分離が必要。<span class="tag t-inf">支持/推論</span></li>
+            <li><b>「MCP・A2Aが標準になった」</b>：実際は「これから期待される新しい規格」どまり。<span class="tag t-sup">支持</span></li>
+            <li><b>「コードは使い捨てになる」</b>：著者自身が「あくまで予想」と断っている。<span class="tag t-sup">支持</span></li>
           </ul>
         </div>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>道具は大きく変わった。でも「難所と責任は人間」という土台は変わらない。</div>
     </div>
   </section>
 
@@ -328,40 +338,41 @@
     <div class="rail"><div class="no">04 — MODEL</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 04</div>
-      <h2>AIネイティブ運用モデル（2026年型）</h2>
+      <h2>2026年の進め方（運用モデル）</h2>
       <div class="rule"></div>
-      <p class="lede">確率的AIを制御する決定論的ハーネスを組み込んだ開発ライフサイクル。<b style="color:var(--cyan)">シアンの工程が人間の主要ゲート</b>。</p>
+      <p class="lede">AIは当たり外れがある。だから「テスト・型・CI」という土台の中で動かす。<b style="color:var(--cyan)">青い工程が、人間が必ず確認する関所</b>。</p>
       <div class="duo">
         <div class="scroll">
           <div class="flow">
-            <div class="step"><div class="k">1</div><div class="t"><b>曖昧な問題設定</b><span> — ビジネス・ユーザーの痛みを特定（人間）</span></div></div>
-            <div class="step"><div class="k">2</div><div class="t"><b>文脈のキュレーション</b><span> — 声・失敗・制約を Context Pack 化（PM）</span></div></div>
-            <div class="step gate"><div class="k">3</div><div class="t"><b>意図設計・計画</b><span> — 行動計画をレビュー・承認</span><span class="gatetag">GATE 1</span></div></div>
-            <div class="step"><div class="k">4</div><div class="t"><b>自律実行ループ</b><span> — 型・Linter・テストの足場内で自律修正（Agent）</span></div></div>
-            <div class="step gate"><div class="k">5</div><div class="t"><b>差分レビュー</b><span> — アーキ・認可・エッジケースを査読</span><span class="gatetag">GATE 2</span></div></div>
-            <div class="step"><div class="k">6</div><div class="t"><b>統合・段階展開</b><span> — SAST・fuzzing・Canary・ロールバック監視（CI/CD）</span></div></div>
+            <div class="step"><div class="k">1</div><div class="t"><b>何を解くか決める</b><span> — 事業とユーザーの困りごとを見極める（人間）</span></div></div>
+            <div class="step"><div class="k">2</div><div class="t"><b>情報をそろえる</b><span> — 声・失敗例・制約を1つの資料にまとめる（PM）</span></div></div>
+            <div class="step gate"><div class="k">3</div><div class="t"><b>計画を確認する</b><span> — AIの段取りを人が見て承認</span><span class="gatetag">関所1</span></div></div>
+            <div class="step"><div class="k">4</div><div class="t"><b>AIが作って直す</b><span> — 型・チェック・テストの中で自分で修正（AI）</span></div></div>
+            <div class="step gate"><div class="k">5</div><div class="t"><b>差分を見る</b><span> — 設計・権限まわり・例外を人がレビュー</span><span class="gatetag">関所2</span></div></div>
+            <div class="step"><div class="k">6</div><div class="t"><b>少しずつ出す</b><span> — 検査を通し、まず一部に出して様子を見る（CI/CD）</span></div></div>
           </div>
         </div>
         <div class="scroll">
           <div class="grp">
-            <h3><span class="chip">ROLES</span>チーム構造</h3>
+            <h3><span class="chip">役割</span>少人数チームの形</h3>
             <ul class="b">
-              <li><b>PM＝Context Engineer</b>：意図整形・文脈精選・taste で評価</li>
-              <li><b>プロダクトエンジニア</b>：オーケストレーションと最終品質担保</li>
-              <li><b>テックリード／アーキテクト</b>：境界・API契約・計画承認責任</li>
-              <li><b>品質/セキュリティ・ストラテジスト</b>：fuzz・SAST のハーネス設計</li>
+              <li><b>PM</b>：目的と文脈を整え、出てきたものの良し悪しを見極める</li>
+              <li><b>エンジニア</b>：AIを使いこなしつつ、最後の品質を担保する</li>
+              <li><b>テックリード</b>：境界とルールを設計し、計画を承認する</li>
+              <li><b>品質・セキュリティ担当</b>：テストや検査の土台をつくる</li>
             </ul>
           </div>
           <div class="grp">
-            <h3><span class="chip keep">GUARDRAILS</span>ガバナンス</h3>
+            <h3><span class="chip keep">守り</span>外してはいけないルール</h3>
             <ul class="b">
-              <li>本番の秘密情報をプロンプト／文脈へ<b>絶対に流入させない</b></li>
-              <li>MCP権限は最小化、書込・実行エージェントは完全隔離</li>
-              <li>評価軸は記述量でなく <b>Time to Value・欠陥流出率</b></li>
+              <li>本番のパスワードや鍵を、AIに<b>絶対に渡さない</b></li>
+              <li>AIの権限は最小限に。書き込み・実行をするAIは隔離する</li>
+              <li>評価は「書いた量」でなく<b>価値が届くまでの速さ・不具合の漏れ</b>で</li>
             </ul>
           </div>
         </div>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>速いAIを安全に使う鍵は、書く前と出す前に「人が確認する関所」を置くこと。</div>
     </div>
   </section>
 
@@ -370,23 +381,24 @@
     <div class="rail"><div class="no">05 — MATRIX</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 05</div>
-      <h2>人間とエージェントの責務分界マトリクス</h2>
+      <h2>どこを人がやり、どこをAIに任せるか</h2>
       <div class="rule"></div>
-      <p class="lede">活動ごとに「人間が負う責任」「エージェントが実行する範囲」「必須ガードレール」「検証方法」を分離する。</p>
+      <p class="lede">作業ごとに「人が責任をもつ部分」「AIに任せる部分」「外せない守り」「確かめ方」を分けて決めておく。</p>
       <div class="scroll">
         <table>
-          <thead><tr><th>活動</th><th>人間の責任</th><th>エージェントの実行</th><th>ガードレール</th><th>検証方法</th></tr></thead>
+          <thead><tr><th>作業</th><th>人が責任をもつ</th><th>AIに任せる</th><th>外せない守り</th><th>確かめ方</th></tr></thead>
           <tbody>
-            <tr><td><b>要件定義</b></td><td>目標定義・共感・問題のフレーミング</td><td>機能要件・タスク分解案の生成</td><td>機密情報の混入制限</td><td>価値・制約の整合性チェック</td></tr>
-            <tr><td><b>システム設計</b></td><td>トレードオフ判断・モジュール境界</td><td>指示に沿ったコード骨格作成</td><td><code>.cursorrules</code> 等で制約</td><td><b>計画フェーズ審査</b></td></tr>
-            <tr><td><b>コード実装</b></td><td>コアロジック・新規アルゴ・taste 判断</td><td>定型CRUD・API・glue code</td><td>書込権限制限・サンドボックス</td><td><b>理解できぬコードはマージ禁止</b></td></tr>
-            <tr><td><b>品質保証</b></td><td>テスト戦略・期待値の妥当性検証</td><td>テスト自動生成・自己修正</td><td>テスト期待値の自動書換え禁止</td><td>型・Linter・SAST の機械的実行</td></tr>
-            <tr><td><b>DB設計</b></td><td>データモデル・整合性ルール</td><td>スキーマ・マイグレ・JOIN起草</td><td>本番DB直結（書込）を遮断</td><td>名称一致・実行計画レビュー</td></tr>
-            <tr><td><b>セキュリティ</b></td><td>リスク受容・認可ポリシー設計</td><td>脆弱性指摘・検証/サニタイズ挿入</td><td>秘密情報の環境変数化を強制</td><td>SAST＋認可ロジックの人間査読</td></tr>
-            <tr><td><b>デプロイ運用</b></td><td>ロールバック最終判断・SLO設定</td><td>IaC草案・パイプライン監視</td><td>一括デプロイ権限禁止・Canary</td><td>可観測性＋AIops異常検知</td></tr>
+            <tr><td><b>要件を決める</b></td><td>目的・ユーザー理解・問題の絞り込み</td><td>機能の洗い出し・分解案づくり</td><td>機密情報を渡さない</td><td>価値と制約が合っているか皆で確認</td></tr>
+            <tr><td><b>システム設計</b></td><td>方針の取捨選択・部品の境界決め</td><td>指示どおりの骨組み作成</td><td>ルールファイルで枠をはめる</td><td><b>着手前に計画を確認</b></td></tr>
+            <tr><td><b>コードを書く</b></td><td>核となるロジック・難所・良し悪し判断</td><td>定型コード・API・つなぎの部分</td><td>書き込み権限を絞る・隔離する</td><td><b>わからないコードは通さない</b></td></tr>
+            <tr><td><b>テスト</b></td><td>方針づくり・期待値が妥当かの確認</td><td>テストの自動生成・自分で修正</td><td>期待値をAIに勝手に書き換えさせない</td><td>型・チェック・検査を機械で実行</td></tr>
+            <tr><td><b>DB設計</b></td><td>データの持ち方・整合性ルール</td><td>スキーマ・移行・問い合わせの下書き</td><td>本番DBへ直接つながせない</td><td>名前の一致・遅くないかを確認</td></tr>
+            <tr><td><b>セキュリティ</b></td><td>リスクの受け入れ・権限ルール設計</td><td>弱点の指摘・入力チェックの挿入</td><td>鍵やパスワードは設定ファイルへ</td><td>自動検査＋権限まわりを人が読む</td></tr>
+            <tr><td><b>リリース運用</b></td><td>切り戻しの最終判断・目標値の設定</td><td>構成ファイルの下書き・実行の監視</td><td>一気に全部出させない・一部から</td><td>出した後の数値を監視し異常を検知</td></tr>
           </tbody>
         </table>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>「任せる/任せない」を作業ごとに線引きしておけば、速さと安全は両立できる。</div>
     </div>
   </section>
 
@@ -395,18 +407,19 @@
     <div class="rail"><div class="no">06 — SKILLS</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 06</div>
-      <h2>2026年型スキルモデル</h2>
+      <h2>これから伸ばすべき力（2026年型）</h2>
       <div class="rule"></div>
-      <p class="lede">プロンプト記述を超えた「持続的スキル（Durable Skills）」。確率的リスクを制御するための工学的コンピテンシー。</p>
+      <p class="lede">プロンプトの書き方より長く効く「すたれない力」。AIの当たり外れを抑え、価値を出すための土台になる。</p>
       <div class="scroll">
         <div class="skill">
-          <div class="scard"><h4>PM</h4><p><b>文脈エンジニアリング</b>／<b>審美眼と評価設計</b>（shippable か判断）／<b>問題のフレーミング</b>（真の課題と非目標の境界化）。</p></div>
-          <div class="scard"><h4>ソフトウェアエンジニア</h4><p><b>コード解読と構造査読</b>（編集者としての読解）／<b>システム俯瞰デバッグ</b>（前提不一致の特定）／<b>テストの足場設計</b>。</p></div>
-          <div class="scard"><h4>テックリード／アーキテクト</h4><p><b>境界とインターフェース設計</b>（防火壁）／<b>技術キュレーションとAIガバナンス</b>／<b>計画レビューとリスク受容</b>。</p></div>
-          <div class="scard"><h4>デザイナー</h4><p><b>生成UXディレクション</b>（実働UIへ直接反復）／<b>アクセシビリティ監査</b>（a11y・i18n）／<b>コンポーネント志向設計</b>。</p></div>
-          <div class="scard" style="grid-column:1 / -1"><h4>エンジニアリングマネージャー／アジャイルコーチ</h4><p><b>社会技術的ファシリテーション</b>（検証力ベースの見積り・スキル萎縮対策）／<b>継続的学習の組織化</b>（ポストモーテムでナレッジ還元）／<b>リソースとコストのガバナンス</b>（トークン・GPU費用と動的ルーティング）。</p></div>
+          <div class="scard"><h4>PM</h4><p><b>文脈を整える力</b>（声・失敗例・基準をそろえて渡す）／<b>良し悪しを見抜く目</b>（出せる品質か判断）／<b>問題を絞る力</b>（解くこと・解かないことを言葉にする）。</p></div>
+          <div class="scard"><h4>エンジニア</h4><p><b>コードを読む力</b>（自分が書いていない差分を読み解く）／<b>全体を見て直す力</b>（部品どうしの食い違いを突き止める）／<b>テストの土台をつくる力</b>。</p></div>
+          <div class="scard"><h4>テックリード</h4><p><b>境界を設計する力</b>（変更が他に波及しない作りにする）／<b>AIのルール整備</b>（触ってよい範囲を決める）／<b>計画を見てリスクを引き受ける力</b>。</p></div>
+          <div class="scard"><h4>デザイナー</h4><p><b>動く画面を作って試す力</b>（ラフから素早く形にする）／<b>使いやすさの確認</b>（読み上げ・操作・多言語）／<b>部品で考える設計</b>。</p></div>
+          <div class="scard" style="grid-column:1 / -1"><h4>エンジニアリングマネージャー</h4><p><b>人とAIの混成チーム運営</b>（確認にかかる時間で見積もる・スキル低下を防ぐ）／<b>学びを共有する仕組みづくり</b>（失敗を振り返って全体に還す）／<b>コストの管理</b>（無駄な処理や費用を抑え、モデルを使い分ける）。</p></div>
         </div>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>これからの強みは「AIに頼む力」より「AIの答えを確かめ、判断できる力」。</div>
     </div>
   </section>
 
@@ -415,43 +428,44 @@
     <div class="rail"><div class="no">07 — ROLLOUT</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 07</div>
-      <h2>30 / 60 / 90日 導入計画</h2>
+      <h2>30・60・90日でこう始める</h2>
       <div class="rule"></div>
-      <p class="lede">速度を上げつつ品質と信頼性を損なわないための、段階的な実験プラン。</p>
+      <p class="lede">速さを上げつつ品質を落とさないための、現実的な進め方。小さく試して広げる。</p>
       <div class="scroll">
         <div class="cols">
           <div class="col change">
-            <div class="h">〜30日：ハーネス整備</div>
+            <div class="h">〜30日：土台をつくる</div>
             <ul>
-              <li>フォーマッター＋厳格Linterを<b>CIで強制</b></li>
-              <li><code>.cursorrules</code> 等で規約と「<code>.env</code>読み書き禁止」を明記</li>
-              <li>境界明確な低リスクタスクを1つ自律完走</li>
-              <li><b>指標</b>：無修正でLinter/型通過する割合</li>
-              <li><b>対策</b>：テスト期待値は人間が二重チェック</li>
+              <li>整形ツールとチェックを<b>CIで必須</b>にする</li>
+              <li>ルールファイルに規約と「鍵は触らせない」を明記</li>
+              <li>影響の小さい作業を1つ、AIに最後までやらせて試す</li>
+              <li><b>見る指標</b>：人が直さずチェックを通った割合</li>
+              <li><b>注意</b>：テストの期待値は人が二度確認する</li>
             </ul>
           </div>
           <div class="col keep">
-            <div class="h">〜60日：Context-First＋計画ゲート</div>
+            <div class="h">〜60日：文脈と計画の関所</div>
             <ul>
-              <li>PMが<b>Context Pack</b>（声・失敗・画面例）を作成</li>
-              <li>v0/Lovable で数時間〜数日のMVPを顧客検証</li>
-              <li>本番化は<b>実装計画(Plan)の承認ゲート</b>を試行</li>
-              <li><b>指標</b>：Time to Feedback短縮・差し戻し減</li>
-              <li><b>対策</b>：プロトは使い捨て、本番は別途クリーンに再構築</li>
+              <li>PMが<b>情報をまとめた資料</b>（声・失敗例・画面例）を作る</li>
+              <li>試作を数時間〜数日で作り、お客さんに当てて確かめる</li>
+              <li>本番前に<b>「計画を承認する関所」</b>を試す</li>
+              <li><b>見る指標</b>：反応をもらうまでの速さ・手戻りの減り</li>
+              <li><b>注意</b>：試作は使い捨て。本番は別途きれいに作り直す</li>
             </ul>
           </div>
           <div class="col dont">
-            <div class="h">〜90日：マルチエージェント＋AIops</div>
+            <div class="h">〜90日：自動化と監視</div>
             <ul>
-              <li>バグのトリアージ〜修正を複数エージェントで自動化</li>
-              <li>PRに<b>AI専用レビューチェックリスト</b>を適用</li>
-              <li>Canary 5%＋閾値超過で<b>秒単位の自動ロールバック</b></li>
-              <li><b>指標</b>：自動化率・AI不具合検出数</li>
-              <li><b>対策</b>：触る境界を分離、アーキテクトがマージのハブ</li>
+              <li>バグの仕分け〜修正を、複数のAIで自動化してみる</li>
+              <li>AIの変更には<b>専用チェック項目</b>でレビューする</li>
+              <li>まず一部に出し、異常があれば<b>すぐ自動で切り戻す</b></li>
+              <li><b>見る指標</b>：自動化できた割合・人が見つけた不具合の数</li>
+              <li><b>注意</b>：触る範囲を分け、まとめ役を人が務める</li>
             </ul>
           </div>
         </div>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>いきなり広げない。土台→関所→自動化の順に、小さく試して育てる。</div>
     </div>
   </section>
 
@@ -460,32 +474,33 @@
     <div class="rail"><div class="no">08 — METRICS</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 08</div>
-      <h2>能力進化の定量的指標（2025→2026）</h2>
+      <h2>AIはどれだけ伸びたか（数字で見る）</h2>
       <div class="rule"></div>
-      <p class="lede">2つの直交する軸で進化を捉える。<b style="color:var(--cyan)">SWE-bench＝成功率（品質）</b>、<b style="color:var(--amber)">METR＝自律タスクの長さ（委譲範囲）</b>。</p>
+      <p class="lede">伸びを2つのものさしで見る。<b style="color:var(--cyan)">SWE-bench＝どれだけ正しく解けるか</b>と、<b style="color:var(--amber)">METR＝どれだけ長い作業を一人で任せられるか</b>。</p>
       <div class="axes">
         <div class="axis q">
-          <div class="lab">SWE-bench Verified ／ タスク成功率</div>
-          <div class="big">2% → 88.6%<span style="font-size:14px;color:var(--mist)">（Fable 5は95.0%）</span></div>
-          <div class="sub">2023年10月 Claude 2 の1.96%から、2026年6月 Opus 4.8 で88.6%へ。約2年半でほぼ解けない→大半を解ける水準に。<span class="tag t-sup">支持</span></div>
+          <div class="lab">ものさし① 正しく解けた割合（SWE-bench）</div>
+          <div class="big">2% → 88.6%<span style="font-size:14px;color:var(--mist)">（最上位は95.0%）</span></div>
+          <div class="sub">本物のバグ修正課題で、2023年の約2%から、2026年6月には88.6%に。約2年半で「ほぼ解けない」が「だいたい解ける」に。<span class="tag t-sup">支持</span></div>
         </div>
         <div class="axis t">
-          <div class="lab">METR 50%時間ホライズン ／ 自律遂行できる長さ</div>
+          <div class="lab">ものさし② 一人で任せられる作業の長さ（METR）</div>
           <div class="big">2秒 → 約12時間</div>
-          <div class="sub">GPT-2の2秒、3.7 Sonnetの50分、o3の約2時間、Opus 4.6で約12時間。倍増周期は7か月→<b>近年4か月</b>に加速。<span class="tag t-sup">支持</span></div>
+          <div class="sub">半分の確率でやり切れる作業の長さ。数秒だったのが、いまは人で約12時間ぶんに。伸びる速さも7ヶ月→<b>4ヶ月で2倍</b>に加速。<span class="tag t-sup">支持</span></div>
         </div>
       </div>
       <div class="scroll">
         <div class="caution">
-          <b>留保①（汚染と飽和）</b>：主要モデルがVerifiedの正解パッチを再現でき、汚染が判明。OpenAIはVerified報告を停止しPro推奨へ。同じ Opus 4.5 が Verified 80.9% → 標準化Proで <b>45.9%</b> に下落。<b>高スコアは自社の非公開コードでの性能を保証しない</b>。<span class="tag t-ext">支持/外部</span>
+          <b>注意① 数字は割り引いて見る</b>：この問題集は答えが学習に混ざっていたと判明し、信頼性が低下。条件をそろえた別の試験では、同じモデルが80.9%→<b>45.9%</b>まで落ちた。<b>高得点でも、自社のコードで同じに動く保証はない</b>。<span class="tag t-ext">支持/外部</span>
         </div>
         <div class="caution" style="margin-top:10px">
-          <b>留保②（信頼度の閾値）</b>：METRの数字は「50%成功」地点。実務水準（80%以上）ではホライズンは <b>4〜6倍短い</b>。<b>「12時間」は半々で成功する点であって、安心して放任できる点ではない</b>。<span class="tag t-sup">支持</span>／<span class="tag t-ext">外部</span>
+          <b>注意② 「12時間」は半々の話</b>：これは成功率50%での数字。実務で必要な確実さ（80%以上）を求めると、任せられる長さは<b>4〜6分の1</b>に縮む。<b>放っておいて大丈夫な長さではない</b>。<span class="tag t-sup">支持</span>／<span class="tag t-ext">外部</span>
         </div>
         <div class="caution" style="margin-top:10px;border-left-color:var(--cyan);background:rgba(86,214,200,.08)">
-          <b>経営への含意</b>：能力も委譲範囲も指数関数的に伸びた。だが境界が能力側へ広がるほど、§9の運用方針（決定論的ハーネス＋人間の説明責任）の<b>投資対効果はむしろ高まる</b>。<span class="tag t-inf">推論</span>
+          <b>経営として読むこと</b>：できることも、任せられる長さも、確かに伸びた。だからこそ「土台づくりと人の確認」への投資が、<b>ますます効いてくる</b>。<span class="tag t-inf">推論</span>
         </div>
       </div>
+      <div class="punch"><span class="mk">この章の結論</span>AIは確かに伸びた。けれど数字は割り引いて読み、確実さが要る所は人が締める。</div>
     </div>
   </section>
 
@@ -494,41 +509,42 @@
     <div class="rail"><div class="no">09 — VERDICT</div><div class="tick"></div><div class="dot"></div></div>
     <div class="body">
       <div class="eyebrow">Section 09</div>
-      <h2>最終的・工学的結論</h2>
+      <h2>まとめ ― 結局どうすればいいか</h2>
       <div class="rule"></div>
-      <p class="lede">真の変革は「意図から実装までの摩擦の消失」。だが品質・安全・保守性の<b>最終的な説明責任は一切AIへ移っていない</b>。</p>
+      <p class="lede">いちばんの変化は「思いついてから形にするまでが速くなった」こと。でも<b>品質と安全の最後の責任は、今もAIに移っていない</b>。</p>
       <div class="scroll">
         <div class="cols">
           <div class="col change">
-            <div class="h">今すぐ変えるべきこと</div>
+            <div class="h">今すぐやること</div>
             <ul>
-              <li><b>決定論的ハーネスへの投資</b>。足場が脆ければエージェントは高速なバグ量産機になる</li>
-              <li><b>PM成果物の再定義</b>。PRDより Context Pack</li>
-              <li><b>レビュー運用の変更</b>。着手前の「実行計画」レビューを必須ゲートに</li>
+              <li><b>土台に投資する</b>。テストや検査が弱いと、AIは速いだけのバグ製造機になる</li>
+              <li><b>PMの成果物を変える</b>。細かい仕様書より「目的と文脈をまとめた資料」</li>
+              <li><b>書く前の計画レビュー</b>を必須の関所にする</li>
             </ul>
           </div>
           <div class="col keep">
             <div class="h">変わらない原則</div>
             <ul>
-              <li>テスト合格は<b>必要条件にすぎない</b></li>
-              <li>賢いほど誤りは<b>もっともらしく</b>なる（検出が難化）</li>
-              <li>高能力モデルほど<b>監督・隔離・ガバナンス</b>コストが増す</li>
-              <li>規制・地政学で<b>モデルが突然消えうる供給リスク</b>（冗長性が要る）</li>
+              <li>テストが通るのは<b>当たり前の前提</b>。それで終わりではない</li>
+              <li>賢いほど間違いが<b>もっともらしく</b>なり、見抜きにくい</li>
+              <li>強いAIほど<b>監視・隔離・管理</b>の手間も増える</li>
+              <li>規制などで<b>AIが急に使えなくなる</b>こともある。1つに依存しない</li>
             </ul>
           </div>
           <div class="col dont">
-            <div class="h">避けるべき過剰反応</div>
+            <div class="h">やってはいけないこと</div>
             <ul>
-              <li><b>中堅・若手の安易な削減</b>＝将来のシニア枯渇（育成の崩壊）</li>
-              <li><b>「理解なきマージ」の常態化</b>＝障害時に崩壊するブラックボックス</li>
-              <li><b>アジャイル規律の放棄</b>＝速いときほど共通理解と進路修正が要る</li>
+              <li><b>中堅・若手を安易に減らす</b>＝将来コードを見られる人がいなくなる</li>
+              <li><b>中身を理解せずに通す</b>＝後で直せない・障害で崩れる</li>
+              <li><b>進め方の規律を捨てる</b>＝速いときほど認識合わせが要る</li>
             </ul>
           </div>
         </div>
         <div class="caution" style="margin-top:14px;border-left-color:var(--amber);background:rgba(242,177,75,.08)">
-          <b>総括</b>：境界線は能力側へ着実に広がる。しかしモデルが強力になるほど、その力を安全に活かす<b>「決定論的ハーネス」と「人間の説明責任」の重要性は増す</b>。
+          <b>ひとことで</b>：AIにできることは広がり続ける。だからこそ「土台づくり」と「人が責任をもつこと」の大切さは、これからも増していく。
         </div>
       </div>
+      <div class="punch"><span class="mk">最後に</span>速くなったぶん、最後に確かめて決める人間の役割が、いっそう重くなる。</div>
     </div>
   </section>
 

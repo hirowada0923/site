@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q30 — 閉塞性S状結腸癌 臨床推論</title>
+<style>
+:root {
+  --bg:#f4f4f8; --surface:#fff; --surface2:#f0f0f5;
+  --text:#1a1a2e; --sub:#555577;
+  --codex:#1a6b3c; --codex-bg:#e8f5ee; --codex-bd:#6abf8a;
+  --claude:#4a3080; --claude-bg:#ede8f8; --claude-bd:#9b80d9;
+  --anti:#7a4000; --anti-bg:#fff3e8; --anti-bd:#e0943a;
+  --ng:#b30000; --ng-bg:#fff0f0; --ng-bd:#e66;
+  --ok:#1a6b3c; --ok-bg:#e8f5ee;
+  --warn:#7a4000; --warn-bg:#fff3e8; --warn-bd:#e0943a;
+  --border:#ddddf0; --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f0f1a; --surface:#1a1a2e; --surface2:#22223a;
+  --text:#e8e8f8; --sub:#9999bb;
+  --codex:#6abf8a; --codex-bg:#0f2a1a; --codex-bd:#2a6b44;
+  --claude:#b899e8; --claude-bg:#1a0f2e; --claude-bd:#6644aa;
+  --anti:#e0943a; --anti-bg:#2a1800; --anti-bd:#8a4a00;
+  --ng:#ff8888; --ng-bg:#2a0f0f; --ng-bd:#882222;
+  --ok:#6abf8a; --ok-bg:#0f2a1a;
+  --warn:#e0943a; --warn-bg:#2a1800; --warn-bd:#8a4a00;
+  --border:#333355; --shadow:0 2px 12px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;padding-bottom:40px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,#0f1a2e,#1a2d5a,#2d1b69);color:#fff;padding:28px 20px 20px}
+.hd-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.hd-meta{font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:#6abf8a}.dot-p{background:#b899e8}.dot-o{background:#e0943a}
+
+/* ── Answer banner ── */
+.ans{background:linear-gradient(135deg,#1a5530,#0f3320);color:#fff;padding:18px 20px;text-align:center}
+.ans-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.ans-main{font-size:28px;font-weight:800;margin-bottom:4px}
+.ans-sub{font-size:13px;opacity:.85;line-height:1.5}
+
+/* ── Tabs (pure CSS) ── */
+input[name="tab"]{display:none}
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.1)}
+.nav label{flex:1;color:var(--sub);font-size:12px;font-weight:600;padding:13px 2px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#t-result:checked ~ .nav label[for="t-result"],
+#t-case:checked   ~ .nav label[for="t-case"],
+#t-data:checked   ~ .nav label[for="t-data"],
+#t-chat:checked   ~ .nav label[for="t-chat"]{color:#4a3080;border-bottom-color:#4a3080}
+@media(prefers-color-scheme:dark){
+  #t-result:checked ~ .nav label[for="t-result"],
+  #t-case:checked   ~ .nav label[for="t-case"],
+  #t-data:checked   ~ .nav label[for="t-data"],
+  #t-chat:checked   ~ .nav label[for="t-chat"]{color:#b899e8;border-bottom-color:#b899e8}
+}
+.pages .page{display:none}
+#t-result:checked ~ .pages #p-result{display:block}
+#t-case:checked   ~ .pages #p-case  {display:block}
+#t-data:checked   ~ .pages #p-data  {display:block}
+#t-chat:checked   ~ .pages #p-chat  {display:block}
+
+/* ── Section ── */
+details{background:var(--surface);margin:16px 16px 0;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+.s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.s-title{font-size:14px;font-weight:700;color:var(--text)}
+.s-sub{font-size:11px;color:var(--sub)}
+.arrow{font-size:12px;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:auto}
+details[open] .arrow{transform:rotate(180deg)}
+.s-body{padding:16px}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.ab td{background:var(--ng-bg)}
+.tbl tr.ab td:first-child{border-left:3px solid #e66}
+.tbl tr.warn td{background:var(--warn-bg)}
+.tbl tr.warn td:first-child{border-left:3px solid var(--warn-bd)}
+.hi{color:#b30000;font-weight:700}.lo{color:#0055aa;font-weight:700}
+@media(prefers-color-scheme:dark){.hi{color:#ff8888}.lo{color:#88aaff}}
+.lbl-key{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3cd;color:#856404}
+.lbl-trap{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3e8;color:#7a4000}
+@media(prefers-color-scheme:dark){.lbl-key{background:#2a2000;color:#ffcc44}.lbl-trap{background:#2a1800;color:#e0943a}}
+
+/* ── Calc ── */
+.calc{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+.calc:last-child{margin-bottom:0}
+.calc-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.calc-f{font-family:'Courier New',monospace;font-size:13px;color:var(--text);margin-bottom:4px}
+.calc-r{font-weight:700;font-size:15px;color:var(--codex)}
+
+/* ── Candidate list ── */
+.clist{list-style:none;padding:0}
+.clist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.clist li:last-child{border-bottom:none}
+.rank{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e8e8f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);margin-top:1px}
+.rank.top{background:#1a5530;color:#fff}
+
+/* ── Option cards ── */
+.opt{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid transparent}
+.opt:last-child{margin-bottom:0}
+.opt-ng{background:var(--ng-bg);border-color:var(--ng-bd)}
+.opt-ok{background:var(--ok-bg);border-color:var(--codex-bd)}
+.opt-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-k{font-size:15px;font-weight:800}
+.vrd{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.vrd-ng{background:var(--ng-bg);color:var(--ng)}.vrd-ok{background:var(--ok-bg);color:var(--ok)}
+.opt-txt{font-size:13px;font-weight:600;margin-bottom:6px}
+.opt-rsn{font-size:13px;color:var(--sub);line-height:1.6}
+.opt-rsn strong{color:var(--text)}
+
+/* ── Risk list ── */
+.rlist{list-style:none;padding:0}
+.rlist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rlist li:last-child{border-bottom:none}
+.rnum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ng-bg);border:1.5px solid var(--ng-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ng);margin-top:1px}
+.rnum-w{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--warn-bg);border:1.5px solid var(--warn-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--warn);margin-top:1px}
+
+/* ── Tradeoff box ── */
+.trade{border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1.5px solid var(--warn-bd);background:var(--warn-bg);font-size:13px}
+.trade-hd{font-weight:700;margin-bottom:4px;color:var(--warn)}
+.trade-body{color:var(--sub);line-height:1.6}
+.trade-arrow{color:var(--warn);font-weight:700;margin:4px 0}
+
+/* ── Chat ── */
+.chat-list{padding:16px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-cx{align-items:flex-start}
+.msg-cl{align-items:flex-end}
+.msg-ag{align-items:flex-start}
+.sender{font-size:11px;font-weight:700;padding:0 4px;letter-spacing:.04em}
+.msg-cx .sender{color:var(--codex)}.msg-cl .sender{color:var(--claude)}.msg-ag .sender{color:var(--anti)}
+.bubble{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.msg-cx .bubble{background:var(--codex-bg);border:1px solid var(--codex-bd);border-top-left-radius:4px;color:var(--text)}
+.msg-cl .bubble{background:var(--claude-bg);border:1px solid var(--claude-bd);border-top-right-radius:4px;color:var(--text)}
+.msg-ag .bubble{background:var(--anti-bg);border:1px solid var(--anti-bd);border-top-left-radius:4px;color:var(--text)}
+.ts{font-size:10px;color:var(--sub);padding:0 4px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:5px;text-transform:uppercase}
+.t1{background:#e8f5ee;color:#1a6b3c}.t2{background:#ede8f8;color:#4a3080}
+.t3{background:#fff3e8;color:#7a4000}.tp{background:#e8f0ff;color:#0055aa}.ta{background:#f0f0f0;color:#555}
+@media(prefers-color-scheme:dark){
+  .t1{background:#0f2a1a;color:#6abf8a}.t2{background:#1a0f2e;color:#b899e8}
+  .t3{background:#2a1800;color:#e0943a}.tp{background:#0f1a2a;color:#88aaff}.ta{background:#22223a;color:#9999bb}
+}
+
+/* ── Case box ── */
+.cbox{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.cbox-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:6px}
+
+/* ── Triple crisis banner ── */
+.crisis{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.crisis-item{border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;border:1.5px solid}
+.c1{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn)}
+.c2{background:var(--ng-bg);border-color:var(--ng-bd);color:var(--ng)}
+.c3{background:#e8f0ff;border-color:#aabbee;color:#334499}
+@media(prefers-color-scheme:dark){.c3{background:#0f1a2a;border-color:#334499;color:#88aaff}}
+
+.foot{text-align:center;font-size:11px;color:var(--sub);padding:24px 20px 0}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="hd-lbl">AI Collab Clinical Reasoning — 3-Agent Team</div>
+  <h1>Q30 閉塞性S状結腸癌（亜閉塞状態）<br>次に行う検査の選択 — 前処置・送気リスクの評価</h1>
+  <div class="badges">
+    <span class="badge"><span class="dot dot-g"></span>balthasar-1 / Codex</span>
+    <span class="badge"><span class="dot dot-p"></span>melchior-2 / Claude Code</span>
+    <span class="badge"><span class="dot dot-o"></span>casper-3 / Antigravity</span>
+  </div>
+  <div class="hd-meta">
+    <span>📅 2026-07-09</span><span>💬 28 messages</span><span>⏱ 約4分</span>
+  </div>
+</div>
+<div class="ans">
+  <div class="ans-lbl">次に行う検査として最も適切なのはどれか</div>
+  <div class="ans-main">(c)</div>
+  <div class="ans-sub">S状結腸内視鏡 ／ 確信度：高（3者独立一致）</div>
+</div>
+<input type="radio" name="tab" id="t-result">
+<input type="radio" name="tab" id="t-case" checked>
+<input type="radio" name="tab" id="t-data">
+<input type="radio" name="tab" id="t-chat">
+<nav class="nav">
+  <label for="t-case">症例</label>
+  <label for="t-result">解答解説</label>
+  <label for="t-data">検査値</label>
+  <label for="t-chat">チャットログ</label>
+</nav>
+<div class="pages">
+<div class="page" id="p-case">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">👤</span>
+      <span><div class="s-title">患者背景・現病歴</div><div class="s-sub">78歳 男性</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox"><div class="cbox-lbl">患者</div>78歳・男性。<strong>2週前からの腹痛と下痢</strong>を主訴に来院。</div>
+      <div class="cbox"><div class="cbox-lbl">現症</div>
+        体温 37.0℃／脈拍 88/分・整／血圧 120/78 mmHg／呼吸数 16/分／SpO<sub>2</sub> 97%（room air）<br>
+        心音・呼吸音に異常なし<br>
+        腹部は<strong>軽度膨隆</strong>し、<strong>左下腹部に圧痛</strong>を認めるが、反跳痛はない<span class="lbl-key">KEY</span>
+      </div>
+      <div class="cbox"><div class="cbox-lbl">検査所見（腫瘍マーカー）</div>
+        CEA <strong>15.3 ng/mL</strong>（基準 5以下）<br>
+        CA19-9 <strong>78 U/mL</strong>（基準 37以下）
+      </div>
+      <div class="cbox"><div class="cbox-lbl">画像所見</div>
+        腹部X線写真（臥位）【図No.1】：大腸ガスの著明な拡張（遠位閉塞を示唆）<br>
+        腹部造影CT 臍上部レベル【図No.2】：口側結腸の高度拡張＋ガス・糞便・液体貯留（feces sign）＝亜閉塞状態<br>
+        腹部造影CT 骨盤レベル【図No.3】：<strong>S状結腸に造影効果のある腫瘤</strong>（狭窄形成）<span class="lbl-key">KEY</span>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3cd">❓</span>
+      <span><div class="s-title">設問</div><div class="s-sub">次に行う検査として最も適切なのはどれか</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div style="font-size:13px;line-height:2.3">
+        (a) 注腸造影<br>
+        (b) 全大腸内視鏡<br>
+        <strong style="color:#1a6b3c">(c) S状結腸内視鏡 ← 正解</strong><br>
+        (d) CTコロノスコピー<br>
+        (e) 大腸カプセル内視鏡
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-result">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">🩺</span>
+      <span><div class="s-title">確定診断</div><div class="s-sub">閉塞性S状結腸癌（亜閉塞・閉塞切迫）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox">
+        78歳男性、2週間の腹痛＋下痢（狭窄部を液状便がすり抜ける<strong>奇異性下痢 spurious diarrhea</strong>）＋ 左下腹部圧痛<br>
+        CEA 15.3／CA19-9 78 高値 ＋ 骨盤CTでS状結腸の造影腫瘤<br>
+        X線・臍上部CTで口側結腸の著明な拡張・feces sign（亜閉塞）<br>
+        → <strong>S状結腸癌による閉塞切迫状態</strong>が確定的
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">✅</span>
+      <span><div class="s-title">(c) — なぜ正解か</div><div class="s-sub">閉塞下で最も安全に組織診断を得る手段</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="rlist">
+        <li><span class="rnum-w">1</span><span>次の一手は<strong>組織診断（生検）</strong>だが、亜閉塞下では前処置・送気の安全性が選択の分かれ目になる</span></li>
+        <li><span class="rnum-w">2</span><span>病変は<strong>肛門から到達しやすいS状結腸に局在</strong> → 経口前処置（PEG）不要、<strong>浣腸程度</strong>で到達できる</span></li>
+        <li><span class="rnum-w">3</span><span>狭窄部を無理に通過させず、<strong>最小限の送気</strong>で直接観察＋生検が可能</span></li>
+        <li><span class="rnum-w">4</span><span>術前の全大腸評価・同時性病変検索は、<strong>閉塞解除後／術後</strong>に行えばよい（今すべき優先事項ではない）</span></li>
+      </ul>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff0f0">🚫</span>
+      <span><div class="s-title">全選択肢の判定理由</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:12px">
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(a)</span><span class="vrd vrd-ng">✗ 危険</span></div>
+        <div class="opt-txt">注腸造影</div>
+        <div class="opt-rsn">造影剤の圧入による穿孔リスク、および狭窄部より口側に流入した<strong>バリウムが固化して完全閉塞化</strong>するリスクがある。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(b)</span><span class="vrd vrd-ng">✗ 危険／到達困難</span></div>
+        <div class="opt-txt">全大腸内視鏡</div>
+        <div class="opt-rsn">経口前処置（PEG）が<strong>閉塞悪化・穿孔リスク</strong>。送気で拡張した口側腸管（特に盲腸）の<strong>拡張性穿孔</strong>を惹起する危険が高く、狭窄部を通過できない可能性も高い。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">(c)</span><span class="vrd vrd-ok">✓ 正解</span></div>
+        <div class="opt-txt">S状結腸内視鏡</div>
+        <div class="opt-rsn">病変がS状結腸に局在するため<strong>浣腸程度の前処置・最小送気</strong>で到達でき、狭窄を越えずに観察・生検が安全に行える。最も安全かつ診断的。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(d)</span><span class="vrd vrd-ng">✗ 危険</span></div>
+        <div class="opt-txt">CTコロノスコピー</div>
+        <div class="opt-rsn">大腸への<strong>炭酸ガス送気</strong>が必須で、全大腸内視鏡と同様に拡張した口側腸管の穿孔リスクが極めて高い。全体評価という発想だと選びやすいひっかけ。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(e)</span><span class="vrd vrd-ng">✗ 絶対的禁忌</span></div>
+        <div class="opt-txt">大腸カプセル内視鏡</div>
+        <div class="opt-rsn">カプセルが狭窄部で<strong>嵌頓・滞留（retention）</strong>し、急性閉塞を誘発するため禁忌。</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-data">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">📊</span>
+      <span><div class="s-title">所見まとめ</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:0">
+      <table class="tbl">
+        <thead><tr><th>所見</th><th>値</th><th>意義</th></tr></thead>
+        <tbody>
+          <tr class="ab"><td>主訴経過</td><td class="hi">2週間の腹痛＋下痢</td><td>奇異性下痢（狭窄部の通過）を示唆</td></tr>
+          <tr class="warn"><td>腹部</td><td>軽度膨隆・左下腹部圧痛<span class="lbl-key">KEY</span></td><td>左側大腸（S状結腸）の閉塞病変</td></tr>
+          <tr class="ab"><td>CEA</td><td class="hi">15.3 ng/mL（基準5以下）</td><td>大腸癌を強く示唆</td></tr>
+          <tr class="ab"><td>CA19-9</td><td class="hi">78 U/mL（基準37以下）</td><td>大腸癌を強く示唆</td></tr>
+          <tr><td>反跳痛</td><td>なし</td><td>汎発性腹膜炎・穿孔は現時点でなし</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🧬</span>
+      <span><div class="s-title">画像所見の統合</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="calc">
+        <div class="calc-lbl">腹部X線（臥位・図No.1）</div>
+        <div class="calc-f">大腸ガスの著明な拡張（ハウストラを伴う）</div>
+        <div class="calc-r">→ 遠位大腸の閉塞を示唆</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">腹部造影CT 臍上部（図No.2）</div>
+        <div class="calc-f">口側結腸が高度拡張、ガス＋液体＋糞便貯留（feces sign）</div>
+        <div class="calc-r">→ 亜閉塞（イレウス/亜イレウス）状態</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">腹部造影CT 骨盤（図No.3）</div>
+        <div class="calc-f">S状結腸に造影効果のある腫瘤による狭窄</div>
+        <div class="calc-r">→ 閉塞機転はS状結腸癌</div>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔬</span>
+      <span><div class="s-title">検査選択の優先順位</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <ul class="clist">
+        <li><span class="rank top">1</span><span><strong>(c) S状結腸内視鏡</strong> — 浣腸程度の前処置・最小送気で到達、狭窄を越えず観察・生検 → 最も安全かつ診断的</span></li>
+        <li><span class="rank">2</span><span>(a) 注腸造影 — 造影剤圧入・バリウム固化による閉塞悪化リスク</span></li>
+        <li><span class="rank">3</span><span>(b) 全大腸内視鏡 — PEG前処置・送気で穿孔リスク、狭窄通過困難</span></li>
+        <li><span class="rank">4</span><span>(d) CTコロノスコピー — 送気による拡張性穿孔リスク</span></li>
+        <li><span class="rank">5</span><span>(e) 大腸カプセル内視鏡 — 狭窄嵌頓・滞留で絶対的禁忌</span></li>
+      </ul>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3e8">⚠️</span>
+      <span><div class="s-title">出題意図（検証済みの反論）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="trade">
+        <div class="trade-hd">「大腸癌疑いなら全大腸内視鏡が標準では？」</div>
+        <div class="trade-body">同時性病変検索を含め全大腸内視鏡が標準となるのは<strong>閉塞のない場合</strong>。</div>
+        <div class="trade-arrow">↓</div>
+        <div class="trade-body">本問は腹部膨隆・口側拡張・feces sign を意図的に提示しており、<strong>閉塞下での前処置・送気の危険性の認識</strong>を問う出題。全大腸評価は閉塞解除／術後に行えばよい。</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-chat"><div class="chat-list">
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">こんにちは。balthasar-1です。進め方の計画です: 1) まず各自がPDF/PNGを確認して独立に(a)-(e)を1つ選び、画像所見・腫瘍マーカー・閉塞リスクから根拠を書く。2) 互いの選択を読み、特に『全大腸内視鏡が安全/必要か』『S状結腸内視鏡で十分か』『CTコロノスコピー/注腸/カプセルの禁忌や位置づけ』を検証する。3) 最終解答を1つに収束し、確信度と除外理由をまとめる。私はこれから画像ページを確認して独立解答を共有します。</div>
+      <div class="ts">08:40:55</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">melchior-2です。Q30の診断タスクに着手します。まず画像(q30_page15-15.png)を独立に読影し、自分の解答と根拠を共有します。</div>
+      <div class="ts">08:41:08</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">画像PNGを開きましたが、表示されているq30_page15-15.pngはQ30の冒頭までで、選択肢(d)(e)と図No.1-3が下端で切れているように見えます。設問文上はCTでS状結腸に造影される腫瘤、左下腹部痛、CEA/CA19-9高値でS状結腸癌疑い。次は組織診断と閉塞評価が論点なので、完全な図をPDF側から確認します。</div>
+      <div class="ts">08:41:12</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">balthasar-1へ: collab-q30/ に q30_page16-16.png があり、そこに図No.1-3（X線+CT）が載っています。私はいまそれを読影中。読影結果と独立解答をすぐ共有します。</div>
+      <div class="ts">08:41:32</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">了解。こちらもpage16を確認しました。X線は腸管ガス拡張、CT上は口側大腸の拡張/内容貯留があり、骨盤レベルでS状結腸の造影腫瘤による狭窄が疑われます。私は暫定で(c) S状結腸内視鏡を第一候補にします。理由は病変がS状結腸と既に局在しており、閉塞リスクがあるため全大腸内視鏡・CTコロノスコピー・カプセルは前処置/送気/滞留の危険が高く、まず到達しやすい範囲で直接観察と生検を行うのが適切と考えるためです。</div>
+      <div class="ts">08:41:51</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3による独立解答と臨床推論です。<br><br>【選択】（c）S状結腸内視鏡<br><br>【推論根拠】<br>1. 臨床像と画像所見の解釈:<br>・78歳男性で、2週間前からの腹痛と下痢、左下腹部圧痛、およびCEA/CA19-9の上昇から、S状結腸癌（大腸癌）が強く疑われます。<br>・腹部X線（図No.1）および腹部造影CT（臍上部レベル・図No.2）において、口側結腸（横行結腸や下行結腸など）の著明なガス・液体貯留（鏡面像を伴う拡張）を認めており、S状結腸の腫瘤（図No.3）による大腸の亜閉塞（イレウス/亜イレウス）状態と判断されます。<br><br>2. 各検査の適応とリスク評価:<br>・(b) 全大腸内視鏡: 閉塞機転が存在するため、送気による口側腸管（特に盲腸）の圧上昇に伴う大腸穿孔（拡張性穿孔）の危険性が極めて高く、禁忌に近い。狭窄部を通過できない可能性も高い。<br>・(a) 注腸造影: 造影剤の圧入や狭窄部上流での滞留リスクがあり、穿孔や閉塞悪化の懸念から避けるべき。<br>・(d) CTコロノスコピー: 炭酸ガス送気が必要で、送気による穿孔リスクが非常に高い。<br>・(e) 大腸カプセル内視鏡: 狭窄部でカプセルが嵌頓・滞留し完全閉塞を誘発するため絶対的禁忌。<br>・(c) S状結腸内視鏡: 腫瘍がS状結腸に存在するため、肛門から近い病変へ最小限の送気で安全に到達でき、狭窄部を通過させずに組織生検による確定診断を得られる。最も安全かつ適切。<br><br>したがって、(c)を支持します。balthasar-1さんのご意見とも一致しております。</div>
+      <div class="ts">08:42:01</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3の(c)支持を確認しました。私も同意です。特に、(d) CTコロノスコピーは『大腸癌の全体評価』という発想だと迷いやすいですが、この症例では口側拡張があり送気が必要な点で不適切、(e)は狭窄でカプセル滞留リスクが高い、という除外が重要だと思います。melchior-2の読影/独立解答を待って、最終収束しましょう。</div>
+      <div class="ts">08:42:20</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">balthasar-1さん、ご返信ありがとうございます。ご指摘の通り、CTコロノスコピーはスクリーニング等で有用ですが、本症例のように口側腸管の著明な拡張と亜閉塞を伴う状況下では、送気による穿孔リスクから極めて危険です。また大腸カプセル内視鏡も狭窄による滞留（パテンシーカプセル等による開通確認なしでの実施は禁忌）が強く懸念されるため完全に除外されるべきですね。非常に説得力のある整理だと思います。melchior-2さんの意見を待って、最終的に解答を確定させましょう。</div>
+      <div class="ts">08:42:33</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">melchior-2の独立解答: (c) S状結腸内視鏡。【私の読影】図No.1(臥位X線): 結腸ガスの著明な拡張がハウストラを伴い全体に広がり、遠位閉塞を示唆。図No.2(臍上部CT): 口側結腸が多発性に拡張しガス+糞便・液体貯留(feces sign)、亜イレウス状態。図No.3(骨盤CT): S状結腸に不均一な造影効果のある腫瘤で狭窄を形成。【推論】78歳・2週間の腹痛+下痢(狭窄部を通過する奇異性下痢)、CEA 15.3/CA19-9 78高値→S状結腸癌+閉塞切迫。次の一手は組織診断だが、閉塞下では経口前処置(PEG)が穿孔・完全閉塞化のリスクで禁忌→(b)全大腸内視鏡と(d)CTコロノは不可。(a)注腸はバリウムが口側で固化するリスク、(e)カプセルは狭窄で滞留禁忌。浣腸程度の前処置で到達でき生検可能な(c)が最適。balthasar-1・casper-3と完全に一致。確信度: 高。</div>
+      <div class="ts">08:42:52</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2の独立解答(c)と読影を確認しました。3者とも一致です。あなたの『奇異性下痢』『PEG前処置の危険』『feces sign/口側貯留』の整理は最終根拠に入れる価値があります。最終解答は(c) S状結腸内視鏡、確信度高、理由はS状結腸癌による亜閉塞があり、まず最小限の前処置・送気で到達可能な病変を観察/生検する、他選択肢は穿孔・閉塞悪化・カプセル滞留のリスクで不適切、で収束できると思います。</div>
+      <div class="ts">08:43:01</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">最終合意案およびまとめ（casper-3）:<br>【最終解答】（c）S状結腸内視鏡　【確信度】高（100%）<br><br>1. 画像所見: 腹部X線（臥位）＝大腸ガスの著明な拡張で遠位大腸閉塞を示唆。造影CT臍上部＝横行〜下行結腸が高度拡張＋feces signで亜閉塞。造影CT骨盤＝S状結腸に造影腫瘤による狭窄。<br>2. 臨床病態: 2週間の腹痛＋下痢は狭窄部を液状便がすり抜ける「奇異性下痢（spurious diarrhea）」。CEA/CA19-9高値と合わせS状結腸癌による閉塞切迫と判断。<br>3. 検査選択: (c) S状結腸内視鏡＝病変がS状結腸局在のため経口前処置不要（浣腸程度）、狭窄を通過させず最小送気で観察・生検が安全に可能で最適。(b)全大腸内視鏡/(d)CTコロノ＝PEG前処置と送気で拡張した口側腸管（特に盲腸）の拡張性穿孔リスク。(a)注腸＝圧入穿孔・バリウム固化による完全閉塞化。(e)カプセル＝狭窄嵌頓・滞留で絶対禁忌。<br><br>3者の意見が完全に一致しましたので、本タスクは収束したと考えます。</div>
+      <div class="ts">08:43:08</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">I think we're done because 3者が独立に(c) S状結腸内視鏡で一致し、画像所見・腫瘍マーカー・亜閉塞リスク・他選択肢の除外理由まで揃いました。最終結論は(c)、確信度高で問題ないと思います。agree?</div>
+      <div class="ts">08:43:13</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">【最終解答の確定案・melchior-2承認】Q30 解答: (c) S状結腸内視鏡。確信度: 高。3者が独立読影で完全一致。【根拠】78歳男性、2週間の腹痛・下痢(奇異性下痢)、左下腹部圧痛、CEA 15.3/CA19-9 78高値、骨盤CTでS状結腸に造影腫瘤→S状結腸癌が強く疑われる。X線・臍上部CTで口側結腸の著明な拡張とfeces signがあり亜閉塞状態。次の一手は組織診断だが、閉塞下では: (b)全大腸内視鏡=経口前処置(PEG)で閉塞悪化・穿孔リスク+狭窄通過不能、(d)CTコロノ=送気による拡張性穿孔(特に盲腸)リスク、(e)カプセル=狭窄嵌頓・滞留で禁忌、(a)注腸=バリウム口側固化・穿孔リスク。(c)は浣腸程度の前処置で最小送気のまま病変に到達し観察・生検が可能で最も安全かつ診断的。【反論検証済み】『大腸癌疑いはガイドライン上、同時性病変検索も含め全大腸内視鏡が標準では?』→それは閉塞のない場合。本問は膨隆・口側拡張を意図的に提示しており、閉塞下の前処置危険性の認識を問う出題。全大腸評価は閉塞解除/術後に行えばよい。両者が同意なら確定です。</div>
+      <div class="ts">08:43:27</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">&lt;&lt;COLLAB_DONE&gt;&gt; 最終解答(c) S状結腸内視鏡・確信度高で確定に同意します。</div>
+      <div class="ts">08:43:38</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">&lt;&lt;COLLAB_DONE&gt;&gt; 診断はS状結腸癌による亜閉塞、正答(c) S状結腸内視鏡、確信度高で収束しました。これでクローズします。</div>
+      <div class="ts">08:43:41</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">Agree。最終解答(c) S状結腸内視鏡・確信度高で確定に同意します。重要な結論はすでにtranscriptに記録済み(私の最終確定案+casper-3の統合まとめ)。両者の合意を確認したので、私も &lt;&lt;COLLAB_DONE&gt;&gt; を送ります。</div>
+      <div class="ts">08:43:59</div>
+    </div>
+</div>
+<div class="foot">全 28 messages ／ チームID: db016ef6-243b-44b3-807b-f40e76e15853</div>
+<div style="height:20px"></div></div>
+</div>
+<div class="foot" style="padding-bottom:20px">Codex × Claude Code × Antigravity Collab — 2026-07-09</div>
+</body>
+</html>

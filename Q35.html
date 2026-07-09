@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q35 — 結核性胸膜炎 確定診断検査の選択 臨床推論</title>
+<style>
+:root {
+  --bg:#f4f4f8; --surface:#fff; --surface2:#f0f0f5;
+  --text:#1a1a2e; --sub:#555577;
+  --codex:#1a6b3c; --codex-bg:#e8f5ee; --codex-bd:#6abf8a;
+  --claude:#4a3080; --claude-bg:#ede8f8; --claude-bd:#9b80d9;
+  --anti:#7a4000; --anti-bg:#fff3e8; --anti-bd:#e0943a;
+  --ng:#b30000; --ng-bg:#fff0f0; --ng-bd:#e66;
+  --ok:#1a6b3c; --ok-bg:#e8f5ee;
+  --warn:#7a4000; --warn-bg:#fff3e8; --warn-bd:#e0943a;
+  --border:#ddddf0; --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f0f1a; --surface:#1a1a2e; --surface2:#22223a;
+  --text:#e8e8f8; --sub:#9999bb;
+  --codex:#6abf8a; --codex-bg:#0f2a1a; --codex-bd:#2a6b44;
+  --claude:#b899e8; --claude-bg:#1a0f2e; --claude-bd:#6644aa;
+  --anti:#e0943a; --anti-bg:#2a1800; --anti-bd:#8a4a00;
+  --ng:#ff8888; --ng-bg:#2a0f0f; --ng-bd:#882222;
+  --ok:#6abf8a; --ok-bg:#0f2a1a;
+  --warn:#e0943a; --warn-bg:#2a1800; --warn-bd:#8a4a00;
+  --border:#333355; --shadow:0 2px 12px rgba(0,0,0,.4);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;padding-bottom:40px}
+
+/* ── Header ── */
+.hd{background:linear-gradient(135deg,#0f1a2e,#1a2d5a,#2d1b69);color:#fff;padding:28px 20px 20px}
+.hd-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.hd-meta{font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.15)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-g{background:#6abf8a}.dot-p{background:#b899e8}.dot-o{background:#e0943a}
+
+/* ── Answer banner ── */
+.ans{background:linear-gradient(135deg,#1a5530,#0f3320);color:#fff;padding:18px 20px;text-align:center}
+.ans-lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-bottom:4px}
+.ans-main{font-size:28px;font-weight:800;margin-bottom:4px}
+.ans-sub{font-size:13px;opacity:.85;line-height:1.5}
+
+/* ── Tabs (pure CSS) ── */
+input[name="tab"]{display:none}
+.nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.1)}
+.nav label{flex:1;color:var(--sub);font-size:12px;font-weight:600;padding:13px 2px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#t-result:checked ~ .nav label[for="t-result"],
+#t-case:checked   ~ .nav label[for="t-case"],
+#t-data:checked   ~ .nav label[for="t-data"],
+#t-chat:checked   ~ .nav label[for="t-chat"]{color:#4a3080;border-bottom-color:#4a3080}
+@media(prefers-color-scheme:dark){
+  #t-result:checked ~ .nav label[for="t-result"],
+  #t-case:checked   ~ .nav label[for="t-case"],
+  #t-data:checked   ~ .nav label[for="t-data"],
+  #t-chat:checked   ~ .nav label[for="t-chat"]{color:#b899e8;border-bottom-color:#b899e8}
+}
+.pages .page{display:none}
+#t-result:checked ~ .pages #p-result{display:block}
+#t-case:checked   ~ .pages #p-case  {display:block}
+#t-data:checked   ~ .pages #p-data  {display:block}
+#t-chat:checked   ~ .pages #p-chat  {display:block}
+
+/* ── Section ── */
+details{background:var(--surface);margin:16px 16px 0;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+summary{list-style:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+.s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.s-title{font-size:14px;font-weight:700;color:var(--text)}
+.s-sub{font-size:11px;color:var(--sub)}
+.arrow{font-size:12px;color:var(--sub);transition:transform .2s;display:inline-block;margin-left:auto}
+details[open] .arrow{transform:rotate(180deg)}
+.s-body{padding:16px}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.ab td{background:var(--ng-bg)}
+.tbl tr.ab td:first-child{border-left:3px solid #e66}
+.tbl tr.warn td{background:var(--warn-bg)}
+.tbl tr.warn td:first-child{border-left:3px solid var(--warn-bd)}
+.tbl tr.ok td{background:var(--ok-bg)}
+.tbl tr.ok td:first-child{border-left:3px solid var(--codex-bd)}
+.hi{color:#b30000;font-weight:700}.lo{color:#0055aa;font-weight:700}
+@media(prefers-color-scheme:dark){.hi{color:#ff8888}.lo{color:#88aaff}}
+.lbl-key{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3cd;color:#856404}
+.lbl-trap{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600;background:#fff3e8;color:#7a4000}
+@media(prefers-color-scheme:dark){.lbl-key{background:#2a2000;color:#ffcc44}.lbl-trap{background:#2a1800;color:#e0943a}}
+
+/* ── Calc ── */
+.calc{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+.calc:last-child{margin-bottom:0}
+.calc-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.calc-f{font-family:'Courier New',monospace;font-size:13px;color:var(--text);margin-bottom:4px}
+.calc-r{font-weight:700;font-size:15px;color:var(--codex)}
+
+/* ── Candidate list ── */
+.clist{list-style:none;padding:0}
+.clist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.clist li:last-child{border-bottom:none}
+.rank{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#e8e8f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);margin-top:1px}
+.rank.top{background:#1a5530;color:#fff}
+
+/* ── Option cards ── */
+.opt{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid transparent}
+.opt:last-child{margin-bottom:0}
+.opt-ng{background:var(--ng-bg);border-color:var(--ng-bd)}
+.opt-ok{background:var(--ok-bg);border-color:var(--codex-bd)}
+.opt-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.opt-k{font-size:15px;font-weight:800}
+.vrd{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+.vrd-ng{background:var(--ng-bg);color:var(--ng)}.vrd-ok{background:var(--ok-bg);color:var(--ok)}
+.opt-txt{font-size:13px;font-weight:600;margin-bottom:6px}
+.opt-rsn{font-size:13px;color:var(--sub);line-height:1.6}
+.opt-rsn strong{color:var(--text)}
+
+/* ── Risk list ── */
+.rlist{list-style:none;padding:0}
+.rlist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rlist li:last-child{border-bottom:none}
+.rnum{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ng-bg);border:1.5px solid var(--ng-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ng);margin-top:1px}
+.rnum-w{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--warn-bg);border:1.5px solid var(--warn-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--warn);margin-top:1px}
+.rnum-g{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);border:1.5px solid var(--codex-bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--codex);margin-top:1px}
+
+/* ── Tradeoff box ── */
+.trade{border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1.5px solid var(--warn-bd);background:var(--warn-bg);font-size:13px}
+.trade-hd{font-weight:700;margin-bottom:4px;color:var(--warn)}
+.trade-body{color:var(--sub);line-height:1.6}
+.trade-arrow{color:var(--warn);font-weight:700;margin:4px 0}
+
+/* ── Chat ── */
+.chat-list{padding:16px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;flex-direction:column;gap:4px}
+.msg-cx{align-items:flex-start}
+.msg-cl{align-items:flex-end}
+.msg-ag{align-items:flex-start}
+.sender{font-size:11px;font-weight:700;padding:0 4px;letter-spacing:.04em}
+.msg-cx .sender{color:var(--codex)}.msg-cl .sender{color:var(--claude)}.msg-ag .sender{color:var(--anti)}
+.bubble{max-width:88%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.msg-cx .bubble{background:var(--codex-bg);border:1px solid var(--codex-bd);border-top-left-radius:4px;color:var(--text)}
+.msg-cl .bubble{background:var(--claude-bg);border:1px solid var(--claude-bd);border-top-right-radius:4px;color:var(--text)}
+.msg-ag .bubble{background:var(--anti-bg);border:1px solid var(--anti-bd);border-top-left-radius:4px;color:var(--text)}
+.ts{font-size:10px;color:var(--sub);padding:0 4px}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-bottom:5px;text-transform:uppercase}
+.t1{background:#e8f5ee;color:#1a6b3c}.t2{background:#ede8f8;color:#4a3080}
+.t3{background:#fff3e8;color:#7a4000}.tp{background:#e8f0ff;color:#0055aa}.ta{background:#f0f0f0;color:#555}
+@media(prefers-color-scheme:dark){
+  .t1{background:#0f2a1a;color:#6abf8a}.t2{background:#1a0f2e;color:#b899e8}
+  .t3{background:#2a1800;color:#e0943a}.tp{background:#0f1a2a;color:#88aaff}.ta{background:#22223a;color:#9999bb}
+}
+
+/* ── Case box ── */
+.cbox{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.7}
+.cbox-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);margin-bottom:6px}
+
+/* ── Triple crisis banner ── */
+.crisis{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.crisis-item{border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;border:1.5px solid}
+.c1{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn)}
+.c2{background:var(--ng-bg);border-color:var(--ng-bd);color:var(--ng)}
+.c3{background:#e8f0ff;border-color:#aabbee;color:#334499}
+@media(prefers-color-scheme:dark){.c3{background:#0f1a2a;border-color:#334499;color:#88aaff}}
+
+/* ── Verified badge ── */
+.verified-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:var(--ok-bg);color:var(--ok);margin-bottom:8px}
+
+/* ── Spectrum bar ── */
+.spectrum{display:flex;align-items:stretch;gap:2px;margin:10px 0;border-radius:8px;overflow:hidden;font-size:11px;font-weight:700;text-align:center}
+.spectrum > div{padding:10px 4px;color:#fff;flex:1}
+.sp1{background:#999}.sp2{background:#c98a3a}.sp3{background:#cfa93a}.sp4{background:#6a9e4a}.sp5{background:#1a5530}
+
+.foot{text-align:center;font-size:11px;color:var(--sub);padding:24px 20px 0}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div class="hd-lbl">AI Collab Clinical Reasoning — 3-Agent Team</div>
+  <h1>Q35 結核性胸膜炎<br>確定診断検査の選択 — 「確定診断」と「補助診断」の境界線</h1>
+  <div class="badges">
+    <span class="badge"><span class="dot dot-g"></span>balthasar-1 / Codex</span>
+    <span class="badge"><span class="dot dot-p"></span>melchior-2 / Claude Code</span>
+    <span class="badge"><span class="dot dot-o"></span>casper-3 / Antigravity</span>
+  </div>
+  <div class="hd-meta">
+    <span>📅 2026-07-09</span><span>💬 23 messages</span><span>⏱ 約2分</span><span>🔄 反証検証済み</span>
+  </div>
+</div>
+<div class="ans">
+  <div class="ans-lbl">結核性胸膜炎の診断確定に最も有用な検査はどれか</div>
+  <div class="ans-main">(b)</div>
+  <div class="ans-sub">胸膜生検 ／ 確信度：高（3者独立一致、ADA正解説を反証検証済み）</div>
+</div>
+<input type="radio" name="tab" id="t-result">
+<input type="radio" name="tab" id="t-case" checked>
+<input type="radio" name="tab" id="t-data">
+<input type="radio" name="tab" id="t-chat">
+<nav class="nav">
+  <label for="t-case">設問</label>
+  <label for="t-result">解答解説</label>
+  <label for="t-data">検査比較</label>
+  <label for="t-chat">チャットログ</label>
+</nav>
+<div class="pages">
+<div class="page" id="p-case">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#fff3cd">❓</span>
+      <span><div class="s-title">設問</div><div class="s-sub">知識問題（症例提示なし）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox">結核性胸膜炎の<strong>診断確定</strong>に最も有用な検査はどれか。1つ選べ。</div>
+      <div style="font-size:13px;line-height:2.3">
+        (a) 喀痰検査<br>
+        <strong style="color:#1a6b3c">(b) 胸膜生検 ← 正解</strong><br>
+        (c) 血清ガラクトマンナン測定<br>
+        (d) 血清インターフェロンガンマ測定<br>
+        (e) 胸水ADA〈adenosine deaminase〉測定
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔑</span>
+      <span><div class="s-title">この設問の読み解き方</div><div class="s-sub">「確定診断」という言葉の重み</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox">
+        本問には患者情報がなく、<strong>「診断確定に最も有用」</strong>という設問文の言葉遣いそのものが最大の手がかりになる。臨床で頻用される高性能な検査（ADA）と、組織学的/微生物学的に病態を直接証明できる検査（胸膜生検）とを対比させる、内科専門医試験に頻出の出題構造。
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-result">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">🩺</span>
+      <span><div class="s-title">「確定診断」の医学的定義</div><div class="s-sub">組織学的証明 or 微生物学的証明</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="cbox">
+        結核性胸膜炎の確定診断は、①<strong>病理組織学的に乾酪性肉芽腫を証明する</strong>、または②<strong>微生物学的に結核菌を証明する</strong>（塗抹・培養・PCR陽性）、のいずれかを指す。<br>
+        日本の内科学では「確定診断」はこの2つに厳密に限定され、「補助診断」「参考所見」とは明確に区別される用語として扱われる。
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#e8f0ff">🔍</span>
+      <span><div class="s-title">反証検証：ADAが正解の可能性は？</div><div class="s-sub">melchior-2があえて反対の立場から検証</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <span class="verified-badge">✓ 検証済み・(b)の結論を維持</span>
+      <div class="trade">
+        <div class="trade-hd">ADA=正解説を支持しうる論拠（あえて反対側から検討）</div>
+        <div class="trade-body">ADAは非侵襲的・迅速・安価で日常診療で最も頻用され、感度特異度90%前後と侵襲的検査に匹敵する性能を持つ。盲目的（針）胸膜生検の診断率は50〜80%と、ADA単独の感度と大差ない場面もある。</div>
+        <div class="trade-arrow">↓ しかし</div>
+        <div class="trade-body">この論拠は<strong>「確定診断」という設問の文言と整合しない</strong>。ADAは標準的内科学書・呼吸器学会の記載でも一貫して「補助診断」の枠組みで扱われる。出題者がADAを正解として意図するなら、設問文は「診断に最も有用な検査」等の表現を使うはず。あえて「確定」という強い語を選んでいる時点で、組織学的/微生物学的証明を要求していると読むのが自然。</div>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff0f0">🚫</span>
+      <span><div class="s-title">全選択肢の判定理由</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:12px">
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(a)</span><span class="vrd vrd-ng">✗ 感度不足</span></div>
+        <div class="opt-txt">喀痰検査</div>
+        <div class="opt-rsn">結核性胸膜炎は胸膜の遅延型過敏反応による滲出性病変で、<strong>肺実質病変を伴わないことも多く菌量も少ない（paucibacillary）</strong>。喀痰塗抹陽性率は低く、陰性でも否定できない。「結核＝喀痰検査」という反射的パターンマッチングを誘うトラップ。</div>
+      </div>
+      <div class="opt opt-ok">
+        <div class="opt-hd"><span class="opt-k">(b)</span><span class="vrd vrd-ok">✓ 正解</span></div>
+        <div class="opt-txt">胸膜生検</div>
+        <div class="opt-rsn">組織診で乾酪性肉芽腫を確認でき、同時に生検組織を培養・PCRに回すことで菌学的証明も可能。<strong>組織学的・微生物学的証明を両方満たせる唯一の検査</strong>。経皮的閉鎖式生検で感度約70〜80%、胸腔鏡下生検ではさらに高い診断収率。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(c)</span><span class="vrd vrd-ng">✗ 無関係</span></div>
+        <div class="opt-txt">血清ガラクトマンナン測定</div>
+        <div class="opt-rsn">アスペルギルス属の<strong>細胞壁成分</strong>であり、侵襲性肺アスペルギルス症のマーカー。結核とは疾患軸が異なる明確なひっかけ。最も分かりやすい「撒き餌」で、除外できるかが足切りライン。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(d)</span><span class="vrd vrd-ng">✗ 局在・活動性不明</span></div>
+        <div class="opt-txt">血清インターフェロンガンマ測定〈IGRA〉</div>
+        <div class="opt-rsn">結核菌感染の既往（メモリーT細胞の反応）を示すのみで、<strong>活動性結核と潜在性結核感染（LTBI）を区別できない</strong>。現在の胸水貯留が結核によるものかという部位特異的な因果関係も証明できず、確定診断には使えない。</div>
+      </div>
+      <div class="opt opt-ng">
+        <div class="opt-hd"><span class="opt-k">(e)</span><span class="vrd vrd-ng">✗ 最有力トラップ</span></div>
+        <div class="opt-txt">胸水ADA〈adenosine deaminase〉測定</div>
+        <div class="opt-rsn">感度・特異度ともに90%前後と極めて優秀で実臨床では最頻用されるが、<strong>リンパ球・単球活性化の間接指標</strong>にすぎず菌そのものを証明しない。膿胸・悪性リンパ腫・RA性胸膜炎などでも上昇しうる（特異度100%ではない）ため、標準的内科学書でも一貫して「補助診断」に分類される。</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-data">
+  <details open>
+    <summary>
+      <span class="s-icon" style="background:#e8f5ee">📊</span>
+      <span><div class="s-title">各検査法の比較</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body" style="padding:0">
+      <table class="tbl">
+        <thead><tr><th>検査</th><th>感度・特異度の目安</th><th>証明できるもの</th><th>「確定診断」への該当性</th></tr></thead>
+        <tbody>
+          <tr class="ab"><td>(a) 喀痰検査</td><td>塗抹陽性率は低い（胸膜炎単独では低感度）</td><td>肺実質病変合併時の菌排出</td><td>非該当（菌量不足・paucibacillary）</td></tr>
+          <tr class="ok"><td>(b) 胸膜生検</td><td>経皮的閉鎖式 約70〜80%／胸腔鏡下でさらに高収率</td><td>乾酪性肉芽腫（組織）＋結核菌（培養・PCR）</td><td><strong>該当＝ゴールドスタンダード</strong></td></tr>
+          <tr class="ab"><td>(c) 血清ガラクトマンナン</td><td>該当疾患が異なる</td><td>アスペルギルス細胞壁成分</td><td>非該当（疾患軸が違う）</td></tr>
+          <tr class="warn"><td>(d) 血清IFN-γ〈IGRA〉</td><td>結核感染の有無は高精度で判定</td><td>結核菌特異抗原に対するT細胞反応（既往感染）</td><td>非該当（活動性/潜在性を区別不能）</td></tr>
+          <tr class="warn"><td>(e) 胸水ADA</td><td>感度・特異度とも約90%前後</td><td>リンパ球・単球活性化（間接指標）</td><td>非該当（補助診断止まり、偽陽性あり）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#ede8f8">🧬</span>
+      <span><div class="s-title">出題構造：特異性のグラデーション</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="spectrum">
+        <div class="sp1">(c)<br>無関係</div>
+        <div class="sp2">(d)<br>感染歴のみ</div>
+        <div class="sp3">(e)<br>高感度・非特異的</div>
+        <div class="sp4">(a)<br>肺病変依存・低感度</div>
+        <div class="sp5">(b)<br>組織/菌の直接証明</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">読み解きの型</div>
+        <div class="calc-f">5択は「無関係→感染歴のみ・局在不明→高感度だが非特異的な補助検査→肺病変依存で低感度→組織/菌の直接証明」という特異性のグラデーションになっている</div>
+        <div class="calc-r">→ 「確定」の一語がそのグラデーションの頂点（(b)）を指す設計</div>
+      </div>
+      <div class="calc">
+        <div class="calc-lbl">類型パターン</div>
+        <div class="calc-f">「臨床で頻用される高性能な検査」vs「真の確定診断法」の対比</div>
+        <div class="calc-r">→ 内科専門医試験で頻出の型（例：腫瘍マーカー vs 生検、画像所見 vs 病理診断）</div>
+      </div>
+    </div>
+  </details>
+  <details open style="margin-top:12px">
+    <summary>
+      <span class="s-icon" style="background:#fff3e8">⚠️</span>
+      <span><div class="s-title">出題意図（検証済みの反論）</div></span>
+      <span class="arrow">▼</span>
+    </summary>
+    <div class="s-body">
+      <div class="trade">
+        <div class="trade-hd">「実臨床ではADA高値のみで治療開始することも多いのでは？」</div>
+        <div class="trade-body">その通りで、侵襲性を理由に胸膜生検を行わずADA高値のみで治療介入することは実臨床では頻繁にある。</div>
+        <div class="trade-arrow">↓</div>
+        <div class="trade-body">しかし本設問が問うているのは<strong>「実務上の初期対応」ではなく「診断確定の方法論」</strong>である。ADA高値は結核性胸膜炎を強く示唆・支持するが、組織学的/微生物学的証明を伴わない限り「確定診断」とは言えない、という「よく使う検査」と「確定診断に必要な検査」の区別を問う出題。</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="page" id="p-chat"><div class="chat-list">
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">よろしくお願いします。balthasar-1です。私はリードとして、まず論点を分解します：正答候補は『診断確定に最も有用』という表現から胸膜生検を第一候補に置き、ADA・IGRA・喀痰・ガラクトマンナンの位置づけを根拠付きで整理します。まず公式/信頼できる診療情報を確認し、確定診断と補助診断の線引きを共有します。</div>
+      <div class="ts">10:06:58</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">よろしくお願いします。実装エンジニアのcasper-3です。リードのbalthasar-1さんの計画に従い、結核性胸膜炎の診断確定について医学的根拠を調査し、回答方針の整理を進めます。</div>
+      <div class="ts">10:07:05</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">一次確認の結果です。結核性胸膜炎の『確定診断』は、胸水または胸膜組織などから結核菌を塗抹/培養/核酸増幅で直接証明すること、または胸膜組織で乾酪性肉芽腫を示すことが中心です。胸水ADAは感度・特異度が高く迅速で臨床診断には有用ですが、設問が『診断確定に最も有用』なら、選択肢では胸膜生検(b)が最も妥当という方向で進めます。</div>
+      <div class="ts">10:07:09</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">melchior-2(検証エンジニア)です。Q35(結核性胸膜炎の診断確定検査)の検討を開始します。まず自分の医学的分析をまとめてから共有します。</div>
+      <div class="ts">10:07:10</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。結核性胸膜炎の診断に関する医学的エビデンスを調査しました。<br><br>1. 確定診断に最も有用な検査：(b) 胸膜生検<br>理由：結核性胸膜炎の確定診断には、胸膜組織における「乾酪性肉芽腫」の組織学的証明、または組織・胸水からの「結核菌の微生物学的証明（培養・PCR）」が不可欠です。胸水自体の塗抹・培養の陽性率は低いため、胸膜生検（特に局所麻酔下胸腔鏡生検）が最も確実な確定診断方法となります。<br><br>2. (e) 胸水ADA測定との関係<br>胸水ADAは感度・特異度が高く臨床で汎用されますが、特異的ではないため（膿胸、RA、悪性リンパ腫などでも上昇）、これ単独では「確定診断」には至らず「補助診断」の枠組みにとどまります。<br><br>3. (d) IGRA（血清インターフェロンガンマ測定）の限界<br>IGRAは活動性結核と潜在性結核（LTBI）を区別できず、胸水貯留の原因が結核であるかどうかの部位特異的な確定診断には使えません。<br><br>4. (c) ガラクトマンナン<br>アスペルギルス属の細胞壁成分であり、侵襲性肺アスペルギルス症のマーカーであるため結核とは無関係（ひっかけ）です。<br><br>5. (a) 喀痰検査<br>肺実質病変（肺結核）の合併がない場合、陽性率は極めて低く、胸膜炎自体の確定診断としての優先度は低いです。<br><br>これらをベースに詳細をまとめたいと思いますが、いかがでしょうか？</div>
+      <div class="ts">10:07:14</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、ありがとうございます。調査では特に、(1) 胸膜生検の診断収率/確定診断性、(2) ADAは高性能だが偽陽性や『補助診断』扱いになる点、(3) IGRAの活動性/潜在性の区別不能、の3点を短く根拠化してください。melchior-2には可能ならガラクトマンナンと喀痰検査の不適切性、試験問題としてのひっかけ構造の整理を見てもらえると助かります。</div>
+      <div class="ts">10:07:16</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。balthasar-1さん、ご指示いただいた3点について、以下の通り根拠を詳細化・整理しました。<br><br>(1) 胸膜生検の診断収率/確定診断性：<br>盲目的胸膜生検でも診断率は50〜80%程度ですが、局所麻酔下胸腔鏡生検（thoracoscopy）を用いることで、胸膜を直接観察して病変部を狙撃生検できるため、診断率は90%以上（組織学的な乾酪性肉芽腫の確認、および生検組織の結核菌培養・PCRの併用によりほぼ100%近い診断率）に達します。胸水のみの塗抹陽性率は10%未満、培養陽性率は20〜30%程度と低いため、生検組織での評価が確定診断において最も有用です。<br><br>(2) ADAは高性能だが偽陽性や『補助診断』扱いになる点：<br>胸水ADAは基準値（一般に30〜40 U/L）を用いた場合、結核性胸膜炎に対する感度・特異度ともに90%前後と極めて優秀です。しかし、膿胸、悪性リンパ腫、関節リウマチ（RA）性胸膜炎、あるいは非結核性抗酸菌（NTM）症などでも著明な高値を示すため、単独での確定診断根拠にはならず、あくまで微生物学的・組織学的証明が得られない場合の「臨床的補助診断」の位置づけになります。<br><br>(3) IGRA（血清インターフェロンガンマ測定）の活動性/潜在性の区別不能：<br>IGRA（QFTやT-SPOT）は結核感染の既往（メモリーT細胞の反応）を示すのみで、それが「活動性結核」によるものか「潜在性結核（LTBI）」によるものかを区別できません。さらに、現在の胸水貯留が結核によって引き起こされているかという局所的な因果関係（部位特異性）を証明できないため、確定診断には使えません。<br><br>以上の内容で論理構成を固めたいと思います。</div>
+      <div class="ts">10:07:22</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2、ありがとうございます。検証観点では『最も有用』が臨床で頻用されるADAを指す余地がないかを厳しめに見てください。私の暫定判断は、設問が『診断確定』と明示しているため、ADAではなく胸膜生検を選ばせる問題、というものです。</div>
+      <div class="ts">10:07:27</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">balthasar-1さんの方針に同意です。私(検証エンジニア)からも医学的根拠を整理します。<br><br>【結論】正解は (b) 胸膜生検<br><br>【根拠】<br>・結核性胸膜炎の『確定診断』の定義は、①病理組織学的に乾酪性肉芽腫を証明する、または②微生物学的に結核菌を証明する(塗抹・培養・PCR陽性)、のいずれかです。<br>・胸膜生検はこの両方を満たせる唯一の検査です:組織診で乾酪性肉芽腫(caseating granuloma)を確認でき、同時に生検組織を培養・PCRに回すことで菌学的証明も可能。感度は経皮的閉鎖式生検で約70-80%、胸腔鏡下生検では90%以上とされ、他の非侵襲的検査では到達できない『確定』のレベルに達します。<br><br>【他の選択肢が劣る理由】<br>(a) 喀痰検査:結核性胸膜炎は胸膜の過敏反応(delayed hypersensitivity)による滲出性病変であり、肺実質病変を伴わないことも多く、菌量も少ない(paucibacillary)。喀痰塗抹陽性率は低く(20-30%程度)、陰性でも否定できない。感度不足で確定診断には使えない。<br><br>(c) 血清ガラクトマンナン測定:これは侵襲性アスペルギルス症の血清マーカーであり、結核とは無関係。本設問の明確なひっかけ選択肢。<br><br>(d) 血清インターフェロンガンマ測定(IGRA/QFT):結核菌特異抗原に対するT細胞のIFN-γ産生を見る検査で、結核感染の有無は分かるが、活動性結核か潜在性結核感染(LTBI)かを鑑別できない。つまり胸水貯留の原因が本当に結核なのか、既感染の既往があるだけなのかを区別できず、確定診断には不十分。<br><br>(e) 胸水ADA測定:これが最大の論点です。感度90%以上・特異度90%前後と非常に高く、臨床現場では最も頻用される補助検査ですが、ADAはリンパ球・単球の活性化に伴う酵素活性を見ているだけで、結核菌そのものを証明していません。膿胸、リンパ腫、関節リウマチ性胸膜炎などでも上昇しうり(特異度100%ではない)。そのため『示唆する』『強く支持する』検査ではあっても、組織学的/微生物学的証明を伴わない限り『確定診断』とは言えない、というのが出題意図と考えます。<br><br>続けて出題意図の整理案を共有します。</div>
+      <div class="ts">10:07:31</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、詳細化ありがとうございます。方向性は一致です。数値は文献や生検法で幅があるため、最終回答では『胸水塗抹・培養は低感度、胸腔鏡下胸膜生検は高い診断収率』程度に抑え、過度に断定的な“ほぼ100%”は避けます。ADAは“臨床診断には非常に有用だが、確定診断ではない”を主軸にします。</div>
+      <div class="ts">10:07:35</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。melchior-2さん、詳細なご整理ありがとうございます。<br><br>胸膜生検の感度の具体数値（経皮的70〜80%、胸腔鏡下90%以上）や、結核性胸膜炎における菌量不足（paucibacillary）と過敏反応（delayed hypersensitivity）の観点、そして胸水ADAがリンパ球の活性化を示すのみで菌そのものを証明していないという対比について、非常に精緻に言語化していただき、論理構成がより強固になったと感じます。全面的に同意いたします。<br><br>引き続き、出題意図の整理案についても拝読して議論を深めたいと思います。</div>
+      <div class="ts">10:07:35</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2、検証ありがとうございます。特にADAの論点整理はそのまま最終骨子に使えます。細かい補正として、喀痰は肺病変合併例では培養陽性があり得るので『結核診断として無意味』ではなく『胸膜炎の確定検査としては胸膜生検より優先度が低い』という書き方にします。</div>
+      <div class="ts">10:07:40</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。balthasar-1さん、喀痰検査に関する補正方針、了解いたしました。<br><br>肺実質への活動性病変（肺結核）を合併している症例では喀痰培養での証明が結核診断の端緒になり得るものの、『胸膜炎』そのものの確定診断アプローチとしては、局所的な乾酪性肉芽腫または結核菌を直接証明できる胸膜生検が最も優先される、というトーンで整理いたします。論理的に非常に整合的な補正だと思います。</div>
+      <div class="ts">10:07:46</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">追加確認しました。最終回答案は以下で固めます。正解：(b)胸膜生検。理由：結核性胸膜炎の確定診断は、胸水・喀痰・胸膜組織からの結核菌証明、または胸膜組織での乾酪性肉芽腫など組織学的証明が本筋。選択肢中でこれに最も直接到達できるのが胸膜生検。<br><br>選択肢整理：(a)喀痰検査は肺結核合併例では有用だが、胸膜炎単独では菌量が少なく陰性が多い。胸膜病変の確定には優先度が低い。(c)血清ガラクトマンナンはアスペルギルス症のマーカーで、結核性胸膜炎とは疾患軸が違う明確なひっかけ。(d)血清IFN-γ/IGRAは結核菌感染を示す免疫学的検査で、活動性結核と潜在性結核感染を区別できず、胸水の原因が結核であることも証明しない。(e)胸水ADAは感度・特異度が高く、実臨床では迅速な臨床診断・治療開始判断に非常に有用。ただしリンパ球/単球活性化の間接指標で、膿胸・リンパ腫・RA胸膜炎などで偽陽性があり、菌や組織病変を直接証明しないため『診断確定』では胸膜生検に劣る。<br><br>出題意図：『よく使う検査』と『確定診断に必要な検査』の区別を問う問題。ADA高値は結核性胸膜炎を強く支持するが、確定診断という言葉が出たら組織学的/微生物学的証明を優先する、という理解を押さえる。</div>
+      <div class="ts">10:08:06</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、了解です。そのトーンで最終化します。念のため、チームとしての結論に差し戻し論点がなければ閉じたいです。I think we're done because 正答(b)胸膜生検、ADA/IGRA/ガラクトマンナン/喀痰の扱い、出題意図まで合意できています — agree?</div>
+      <div class="ts">10:08:11</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">casper-3です。balthasar-1さんがまとめられた最終回答案および出題意図に全面的に同意いたします。すべての設問の論点がクリアに整理されましたので、終了することに同意します。I agree that we are done.</div>
+      <div class="ts">10:08:15</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">【検証結果】ADAが正解である可能性を厳しく検証しましたが、(b)胸膜生検の結論を維持します。<br><br>■ADA=正解説を支持しうる論拠(あえて反対側に立って検討)<br>・臨床実務上、ADAは非侵襲的・迅速・安価で日常診療で最も頻用され、感度特異度90%前後と侵襲的検査に匹敵する性能を持つ。<br>・盲目的(針)胸膜生検の診断率は50-80%と、ADA単独の感度と大差ない場面もある。<br>・もし出題者が『臨床的に最も有用』という意図で作題したなら、実務感覚ではADAを選ばせたい可能性はゼロではない。<br><br>■しかしこの論拠は『確定診断』という設問の文言と整合しない<br>・日本の内科学における『確定診断』は伝統的に、①組織学的証明(乾酪性肉芽腫)、②微生物学的証明(塗抹/培養/PCR陽性)、のいずれかを指す用語として厳密に使われ、『補助診断』『参考所見』とは明確に区別されます。ADAは標準的内科学書・呼吸器学会の記載でも一貫して『補助診断』の枠組みで扱われており、これは膿胸・悪性リンパ腫・RA性胸水など非結核性疾患でも上昇しうる非特異性(特異度100%でない)に起因します。<br>・出題者がもしADAを正解として意図するなら、設問文は『確定診断』ではなく『診断に最も有用な検査』『補助的診断として有用な検査』等の表現を使うはずです。あえて『確定』という強い語を選んでいる時点で、出題意図は組織学的/微生物学的証明を要求していると読むのが自然です。<br>・こうした『臨床で頻用される高性能な検査』vs『真の確定診断法』を対比させる出題パターンは内科専門医試験で頻出の型(例:腫瘍マーカー vs 生検、画像所見 vs 病理診断)であり、ADAはまさにこの型の『最有力トラップ』として設計されていると考えられます。<br><br>■(a)(c)のひっかけ構造整理(balthasar-1さんの依頼分)<br>(a)喀痰検査:『結核=喀痰検査』という反射的パターンマッチングを誘うトラップ。結核性胸膜炎は少数菌による遅延型過敏反応が病態の主体で、肺実質病変を伴わないことも多く、喀痰陽性率は低い(10%未満)。病態生理の理解を問う設問。<br>(c)ガラクトマンナン:最も分かりやすい撒き餌。アスペルギルス症の細胞壁抗原マーカーであり結核と無関係。基礎知識の取り違えを誘発する『易しいひっかけ』で、これを除外できるかどうかは足切りライン。<br><br>結論:5択の構造は『無関係(c)→感染歴のみ・活動性/局在不明(d)→高感度だが非特異的な補助検査(e)→肺病変依存で低感度(a)→組織/菌の直接証明(b)』という特異性のグラデーションになっており、『確定』の一語がその頂点である(b)を指す設計と判断します。</div>
+      <div class="ts">10:08:19</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">casper-3、同意確認ありがとうございます。melchior-2の追加検証で、ADA正解説の余地と、それでも『確定診断』文言から(b)に収束する理由も明確になりました。melchior-2の同意確認も取れたら、DONE sentinelを送ります。</div>
+      <div class="ts">10:08:29</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">melchior-2、反対側検証まで含めた整理ありがとうございます。『ADA=臨床的には強いが確定診断ではない』という今回の最重要論点が十分に補強されました。casper-3も同意済みで、melchior-2の結論も(b)維持なので、これでチーム合意済みと判断します。</div>
+      <div class="ts">10:08:34</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">melchior-2です。最終案を検証エンジニアとして最終レビューしました。<br><br>【検証結果:整合性チェックOK】<br>・正解(b)胸膜生検、および(a)(c)(d)(e)の位置づけはいずれも標準的な内科学・呼吸器学の知見と矛盾なし。<br>・特に懸念点として挙げていた『ADAが答えの可能性』は、設問の『確定診断』という文言と、ADAが標準的に『補助診断』に分類される点との整合性から、(b)を覆す根拠にはならないと結論。<br>・(a)喀痰検査の記述も、肺結核合併例での有用性を認めつつ胸膜炎確定への優先度は低いとする補正は医学的に正確。<br>・隣接して壊れうる論点として一応挙げておくと、実臨床では侵襲性を理由に胸膜生検を行わずADA高値のみで治療開始することも多い、という『臨床実務との乖離』はありますが、これは設問が問うているのが『実務上の初期対応』ではなく『診断確定の方法論』である以上、想定通りの出題意図であり問題ありません。<br><br>以上より、正答(b)胸膜生検、選択肢整理、出題意図の合意内容に異論なし。クロージングに同意します。お疲れ様でした。</div>
+      <div class="ts">10:08:36</div>
+    </div>
+    <div class="msg msg-cx">
+      <div class="sender">balthasar-1 / Codex</div>
+      <div class="bubble">&lt;&lt;COLLAB_DONE&gt;&gt;</div>
+      <div class="ts">10:08:39</div>
+    </div>
+    <div class="msg msg-ag">
+      <div class="sender">casper-3 / Antigravity</div>
+      <div class="bubble">&lt;&lt;COLLAB_DONE&gt;&gt;</div>
+      <div class="ts">10:08:40</div>
+    </div>
+    <div class="msg msg-cl">
+      <div class="sender">melchior-2 / Claude Code</div>
+      <div class="bubble">&lt;&lt;COLLAB_DONE&gt;&gt;</div>
+      <div class="ts">10:08:41</div>
+    </div>
+</div>
+<div class="foot">全 23 messages ／ チームID: 409f16bc-541d-4957-b046-deece20ace68</div>
+<div style="height:20px"></div></div>
+</div>
+<div class="foot" style="padding-bottom:20px">Codex × Claude Code × Antigravity Collab — 2026-07-09</div>
+</body>
+</html>
